@@ -12,7 +12,13 @@ login to download. Snapshot: point-in-time extract **as at June 2025** — a sta
 not a live API. Listings are frozen at June 2025 until a refreshed bundle ships; surface an
 "information as of June 2025" note in the UI.
 
-**Licence:** _TODO — copy from the AURIN dataset page._
+**Licence:** NOT a plain open licence. AURIN gates it behind two click-through agreements you
+must sign in when logged in: an **"Academic Confirmation"** and a specific **"NHSD"** data
+agreement (PDF on the dataset page). **Action for the team:** read the NHSD agreement PDF and
+confirm whether bundling a filtered subset into a publicly-deployed app is permitted, or
+whether redistribution is restricted to academic use — this decides whether
+`nhsd-services.json` can ship in the public build. Record the outcome in the Data Management
+Plan (Ethical / Legal / Privacy section).
 
 ### Raw file
 
