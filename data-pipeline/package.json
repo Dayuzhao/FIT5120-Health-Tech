@@ -6,5 +6,8 @@
   "description": "Offline scripts that turn open datasets into static files bundled into the Curbi web app.",
   "scripts": {
     "build:nhsd": "node src/build-nhsd.js"
+  },
+  "dependencies": {
+    "csv-parse": "^5.5.6"
   }
 }
