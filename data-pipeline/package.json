@@ -1,0 +1,10 @@
+{
+  "name": "curbi-data-pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline scripts that turn open datasets into static files bundled into the Curbi web app.",
+  "scripts": {
+    "build:nhsd": "node src/build-nhsd.js"
+  }
+}
