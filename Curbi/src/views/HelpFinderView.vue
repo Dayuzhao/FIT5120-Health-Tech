@@ -161,8 +161,8 @@
       </div>
 
       <p class="data-note">
-        Example service information shown for UI development. Final service
-        information will be connected to the project data source.
+        Service information is based on project directory data as of June 2025.
+        Example content is currently shown for UI development.
       </p>
 
       <div class="status-card loading-state">
