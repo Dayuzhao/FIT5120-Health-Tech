@@ -7,12 +7,18 @@ import CompleteView from '../views/CompleteView.vue'
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import HelpFinderView from '../views/HelpFinderView.vue'
+import RegionalAccessView from '../views/RegionalAccessView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
       path: '/',
+      name: 'regional-access',
+      component: RegionalAccessView,
+    },
+    {
+      path: '/home',
       name: 'home',
       component: HomeView,
     },
