@@ -6,6 +6,7 @@ import TaskView from '../views/TaskView.vue'
 import CompleteView from '../views/CompleteView.vue'
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
+import HelpFinderView from '../views/HelpFinderView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -39,6 +40,11 @@ const router = createRouter({
       path: '/contact',
       name: 'contact',
       component: ContactView,
+    },
+    {
+      path: '/help',
+      name: 'help',
+      component: HelpFinderView,
     },
   ],
 })

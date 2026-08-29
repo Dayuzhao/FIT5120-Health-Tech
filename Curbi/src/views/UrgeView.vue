@@ -61,6 +61,10 @@
         Find a task for me
       </RouterLink>
 
+      <RouterLink to="/help" class="support-link">
+        Find nearby support services
+      </RouterLink>
+
       <RouterLink to="/" class="secondary-link">
         Not right now
       </RouterLink>
@@ -73,6 +77,26 @@
 </template>
 
 <style scoped>
+.support-link {
+  display: block;
+  margin-top: 16px;
+  padding: 13px 20px;
+  border: 1px solid #c9d8cd;
+  border-radius: 10px;
+  color: #4f765a;
+  text-align: center;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.support-link:hover {
+  border-color: #9fb9a7;
+  background: #f3f7f4;
+}
+
 .urge-page {
   max-width: 1180px;
   margin: 0 auto;
