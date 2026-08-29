@@ -8,6 +8,7 @@
       <nav class="nav-links">
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/urge">Urge Support</RouterLink>
+        <RouterLink to="/help" class="nav-link">Find Support</RouterLink>
         <RouterLink to="/about">About</RouterLink>
         <RouterLink to="/contact">Contact</RouterLink>
       </nav>
