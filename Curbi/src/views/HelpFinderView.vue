@@ -60,98 +60,44 @@
 
       <div class="service-list">
         <article class="service-card">
-          <div class="service-top">
-            <div>
-              <h3>Example Mental Health Service</h3>
-              <p class="service-type">Mental health support</p>
-            </div>
+          <h3>Example Mental Health Service</h3>
+              <div class="service-details">
+                    <p>
+                        <strong>Address</strong>
+                        <span>123 Example Street</span>
+                    </p>
 
-            <span class="distance">1.2 km</span>
-          </div>
+                    <p>
+                        <strong>Suburb</strong>
+                        <span>Clayton</span>
+                    </p>
 
-          <div class="service-details">
-            <p>
-              <strong>Address</strong>
-              <span>123 Example Street</span>
-            </p>
-
-            <p>
-              <strong>Suburb</strong>
-              <span>Clayton VIC 3168</span>
-            </p>
-
-            <p>
-              <strong>Opening hours</strong>
-              <span>Monday–Friday, 9:00 AM–5:00 PM</span>
-            </p>
-          </div>
-
-          <button class="details-button" type="button">
-            View details
-          </button>
-
-          <div class="service-more">
-            <div class="detail-row">
-                <div>
-                    <span class="detail-label">Service type</span>
-                    <p>Community mental health support</p>
-                </div>
-
-                <div>
-                    <span class="detail-label">Location</span>
-                    <p>Clayton, Victoria</p>
-                </div>
-            </div>
-
-            <div class="detail-row">
-                <div>
-                <span class="detail-label">Availability</span>
-                <p>Appointments may be required</p>
-                </div>
-            </div>
-
-            <div class="service-description">
-                <span class="detail-label">About this service</span>
-
-                <p>
-                This is example content used to demonstrate how additional service
-                information can be presented. Final details will come from the project
-                service data.
-                </p>
-            </div>
-            </div>
+                    <p>
+                        <strong>Postcode</strong>
+                        <span>3168</span>
+                    </p>
+               </div>
         </article>
 
         <article class="service-card">
-          <div class="service-top">
-            <div>
-              <h3>Community Wellbeing Centre</h3>
-              <p class="service-type">Community support service</p>
+            <h3>Community Wellbeing Centre</h3>
+
+            <div class="service-details">
+                <p>
+                    <strong>Address</strong>
+                    <span>48 Sample Road</span>
+                </p>
+
+                <p>
+                    <strong>Suburb</strong>
+                    <span>Oakleigh</span>
+                </p>
+
+                <p>
+                    <strong>Postcode</strong>
+                    <span>3166</span>
+                </p>
             </div>
-
-            <span class="distance">3.4 km</span>
-          </div>
-
-          <div class="service-details">
-            <p>
-              <strong>Address</strong>
-              <span>48 Sample Road</span>
-            </p>
-
-            <p>
-              <strong>Suburb</strong>
-              <span>Oakleigh VIC 3166</span>
-            </p>
-
-            <p>
-              <strong>Opening hours</strong>
-              <span>Monday–Saturday, 8:30 AM–6:00 PM</span>
-            </p>
-          </div>
-
-          <button class="details-button" type="button">
-            View details
-          </button>
         </article>
       </div>
 
@@ -197,54 +143,6 @@
 .initial-state {
   border-style: dashed;
   background: #f8faf8;
-}
-
-.service-more {
-  margin-top: 20px;
-  padding: 22px;
-  border-radius: 14px;
-  background: #f5f8f6;
-}
-
-.detail-row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-bottom: 20px;
-}
-
-.detail-row > div {
-  min-width: 0;
-}
-
-.detail-label {
-  display: block;
-  margin-bottom: 6px;
-  color: #758078;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.7px;
-  text-transform: uppercase;
-}
-
-.detail-row p,
-.service-description p {
-  margin: 0;
-  color: #4f5e54;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.service-description {
-  padding-top: 18px;
-  border-top: 1px solid #dfe7e1;
-}
-
-@media (max-width: 700px) {
-  .detail-row {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
 }
 
 .status-card {
@@ -425,33 +323,10 @@ h1 {
   background: white;
 }
 
-.service-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.service-top h3 {
+.service-card h3 {
   margin: 0;
   color: #294433;
   font-size: 19px;
-}
-
-.service-type {
-  margin: 6px 0 0;
-  color: #7a857d;
-  font-size: 13px;
-}
-
-.distance {
-  flex-shrink: 0;
-  padding: 7px 10px;
-  border-radius: 20px;
-  background: #eef4ef;
-  color: #4f765a;
-  font-size: 12px;
-  font-weight: 600;
 }
 
 .service-details {
@@ -482,21 +357,6 @@ h1 {
   line-height: 1.5;
 }
 
-.details-button {
-  margin-top: 22px;
-  padding: 10px 16px;
-  border: 1px solid #bfd0c3;
-  border-radius: 9px;
-  background: transparent;
-  color: #4f765a;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.details-button:hover {
-  background: #f3f7f4;
-}
-
 .data-note {
   margin: 20px 0 0;
   color: #89918b;
@@ -519,10 +379,6 @@ h1 {
 
   .results-heading {
     align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .service-top {
     flex-direction: column;
   }
 
