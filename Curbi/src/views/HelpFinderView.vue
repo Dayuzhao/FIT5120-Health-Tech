@@ -93,13 +93,13 @@
           <div class="service-more">
             <div class="detail-row">
                 <div>
-                <span class="detail-label">Service type</span>
-                <p>Community mental health support</p>
+                    <span class="detail-label">Service type</span>
+                    <p>Community mental health support</p>
                 </div>
 
                 <div>
-                <span class="detail-label">Contact</span>
-                <p>03 9000 0000</p>
+                    <span class="detail-label">Location</span>
+                    <p>Clayton, Victoria</p>
                 </div>
             </div>
 
@@ -107,11 +107,6 @@
                 <div>
                 <span class="detail-label">Availability</span>
                 <p>Appointments may be required</p>
-                </div>
-
-                <div>
-                <span class="detail-label">Location</span>
-                <p>Clayton, Victoria</p>
                 </div>
             </div>
 
