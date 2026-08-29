@@ -1,116 +1,199 @@
 <template>
-  <main class="page">
-    <section class="card">
-      <div class="icon">🌿</div>
-
+  <main class="urge-page">
+    <section class="urge-card">
       <p class="eyebrow">CHECKING URGE</p>
 
-      <h1>Having the urge to check?</h1>
+      <h1>What are you feeling the urge to do?</h1>
 
-      <p class="description">
-        That's okay. Instead of checking right now, let's try something
-        different for a few minutes.
+      <p class="intro">
+        Choose the checking behaviour that best matches what you are experiencing
+        right now.
       </p>
 
-      <div class="examples">
-        <p>You might be feeling like...</p>
+      <div class="urge-options">
+        <button class="urge-option" type="button">
+          <span class="option-icon">🔍</span>
 
-        <div class="example">🔍 Searching your symptoms again</div>
-        <div class="example">❤️ Checking your pulse or body</div>
-        <div class="example">🪞 Looking at something repeatedly</div>
-        <div class="example">💬 Asking someone for reassurance</div>
+          <div>
+            <h2>Search symptoms online</h2>
+            <p>I feel like Googling my symptoms again.</p>
+          </div>
+        </button>
+
+        <button class="urge-option" type="button">
+          <span class="option-icon">❤️</span>
+
+          <div>
+            <h2>Check my pulse or body</h2>
+            <p>I want to repeatedly check a physical sensation.</p>
+          </div>
+        </button>
+
+        <button class="urge-option" type="button">
+          <span class="option-icon">🪞</span>
+
+          <div>
+            <h2>Look at a physical change again</h2>
+            <p>I want to keep checking the same spot or body area.</p>
+          </div>
+        </button>
+
+        <button class="urge-option" type="button">
+          <span class="option-icon">💬</span>
+
+          <div>
+            <h2>Ask someone for reassurance</h2>
+            <p>I want someone else to tell me that everything is okay.</p>
+          </div>
+        </button>
+
+        <button class="urge-option" type="button">
+          <span class="option-icon">📄</span>
+
+          <div>
+            <h2>Re-read health information</h2>
+            <p>I want to check an old result, report or health page again.</p>
+          </div>
+        </button>
       </div>
 
       <RouterLink to="/task" class="primary-button">
-        Help me redirect
+        Find a task for me
       </RouterLink>
 
       <RouterLink to="/" class="secondary-link">
         Not right now
       </RouterLink>
+
+      <p class="privacy-text">
+        No login or account is required. Your selections are not stored.
+      </p>
     </section>
   </main>
 </template>
 
 <style scoped>
-.page {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #f5f7f4;
-  font-family: Arial, sans-serif;
-  padding: 24px;
+.urge-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 32px 48px;
 }
 
-.card {
-  width: 100%;
-  max-width: 520px;
-  background: white;
-  border-radius: 24px;
-  padding: 42px;
-  text-align: center;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-}
-
-.icon {
-  font-size: 40px;
-  margin-bottom: 18px;
+.urge-card {
+  max-width: 760px;
+  margin: 0 auto;
 }
 
 .eyebrow {
+  margin-bottom: 12px;
+  color: #5d856a;
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 700;
   letter-spacing: 2px;
-  color: #63856d;
 }
 
 h1 {
-  font-size: 32px;
-  margin: 10px 0 14px;
-  color: #24332a;
+  margin: 0;
+  color: #20392a;
+  font-size: clamp(34px, 4vw, 48px);
+  line-height: 1.15;
 }
 
-.description {
-  color: #68716b;
-  line-height: 1.6;
-  margin-bottom: 30px;
+.intro {
+  max-width: 620px;
+  margin: 18px 0 30px;
+  color: #68736c;
+  font-size: 17px;
+  line-height: 1.7;
 }
 
-.examples {
+.urge-options {
+  display: grid;
+  gap: 14px;
+}
+
+.urge-option {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #e1e8e3;
+  border-radius: 16px;
+  background: white;
   text-align: left;
-  margin-bottom: 30px;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
 }
 
-.examples > p {
+.urge-option:hover {
+  transform: translateY(-2px);
+  border-color: #9cb7a4;
+  background: #f7faf8;
+}
+
+.option-icon {
+  font-size: 26px;
+}
+
+.urge-option h2 {
+  margin: 0 0 6px;
+  color: #294433;
+  font-size: 16px;
+}
+
+.urge-option p {
+  margin: 0;
+  color: #727c75;
   font-size: 14px;
-  color: #777;
-}
-
-.example {
-  background: #f5f7f4;
-  padding: 13px 15px;
-  border-radius: 10px;
-  margin-top: 9px;
-  color: #39453e;
+  line-height: 1.5;
 }
 
 .primary-button {
   display: block;
-  background: #547a61;
+  margin-top: 28px;
+  padding: 15px 22px;
+  border-radius: 10px;
+  background: #4f815f;
   color: white;
-  padding: 15px;
-  border-radius: 12px;
+  text-align: center;
+  font-weight: 600;
   text-decoration: none;
-  font-weight: bold;
-  margin-top: 10px;
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.primary-button:hover {
+  background: #416f50;
+  transform: translateY(-2px);
 }
 
 .secondary-link {
   display: block;
-  color: #777;
+  margin-top: 16px;
+  color: #6f7972;
+  text-align: center;
   text-decoration: none;
-  margin-top: 18px;
-  font-size: 14px;
+}
+
+.privacy-text {
+  margin-top: 24px;
+  color: #889189;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .urge-page {
+    padding: 42px 20px 32px;
+  }
+
+  .urge-option {
+    padding: 17px;
+  }
 }
 </style>
