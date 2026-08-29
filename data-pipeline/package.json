@@ -3,12 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Offline scripts that turn open datasets into static files bundled into the Curbi web app.",
+  "description": "Offline scripts that turn open datasets into static files for the Curbi app and its backend.",
   "scripts": {
     "build:nhsd": "node src/build-nhsd.js",
-    "build:postcodes": "node src/build-postcodes.js"
+    "build:postcodes": "node src/build-postcodes.js",
+    "build:aihw": "node src/build-aihw.js"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "csv-parse": "^5.5.6"
   }
 }

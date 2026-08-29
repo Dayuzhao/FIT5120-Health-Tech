@@ -1,0 +1,29 @@
+{
+  "financialYear": "2024–25",
+  "source": "AIHW – Medicare mental health services 2024–25 (PHN table)",
+  "sourceUrl": "https://www.aihw.gov.au/mental-health/resources/data-tables",
+  "generatedAt": "2026-08-28T13:57:06.232Z",
+  "metroPhns": [
+    "North Western Melbourne",
+    "Eastern Melbourne",
+    "South Eastern Melbourne"
+  ],
+  "regionalPhns": [
+    "Gippsland",
+    "Murray",
+    "Western Victoria"
+  ],
+  "providerType": "All providers",
+  "metrics": {
+    "serviceRatePer1000": {
+      "metro": 569,
+      "regional": 458,
+      "gapPct": -19.6
+    },
+    "patientRatePer1000": {
+      "metro": 111,
+      "regional": 107,
+      "gapPct": -3.9
+    }
+  }
+}
