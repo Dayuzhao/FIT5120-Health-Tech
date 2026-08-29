@@ -55,9 +55,20 @@
         </article>
       </div>
 
+      <div class="data-error">
+        <div class="error-icon">!</div>
+
+        <div class="error-copy">
+            <h3>Comparison data is temporarily unavailable</h3>
+            <p>
+            We couldn't load the regional access comparison right now.
+            You can still continue to Curbi.
+            </p>
+        </div>
+      </div>
+
       <div class="comparison-note">
         <div class="note-icon">i</div>
-
         <p>
           This comparison gives a simple overview of differences in service
           access across Victoria. It is shown during onboarding and does not use
@@ -65,10 +76,20 @@
         </p>
       </div>
 
+      <div class="data-loading">
+        <div class="loading-spinner"></div>
+
+        <div class="loading-copy">
+            <h3>Loading comparison data</h3>
+            <p>
+            Please wait while Curbi prepares the regional access snapshot.
+            </p>
+        </div>
+      </div>
+
       <div class="source-row">
         <div>
           <span class="source-label">DATA SOURCE</span>
-
           <p>
             Australian Institute of Health and Welfare (AIHW)
           </p>
@@ -105,6 +126,84 @@
 </template>
 
 <style scoped>
+.data-loading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #e1e8e3;
+  border-radius: 14px;
+  background: #fafbf9;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 3px solid #dde7df;
+  border-top-color: #5d856a;
+  border-radius: 50%;
+  animation: spin 900ms linear infinite;
+}
+
+.loading-copy h3 {
+  margin: 0 0 6px;
+  color: #294433;
+  font-size: 15px;
+}
+
+.loading-copy p {
+  margin: 0;
+  color: #68736c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.data-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #e1e8e3;
+  border-radius: 14px;
+  background: #fafbf9;
+}
+
+.error-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e8eee9;
+  color: #5f7766;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.error-copy h3 {
+  margin: 0 0 6px;
+  color: #294433;
+  font-size: 15px;
+}
+
+.error-copy p {
+  margin: 0;
+  color: #68736c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .access-page {
   max-width: 1080px;
   margin: 0 auto;
