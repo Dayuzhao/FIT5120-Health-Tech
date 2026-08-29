@@ -1,12 +1,12 @@
 <template>
   <header class="navbar">
     <div class="nav-container">
-      <RouterLink to="/" class="logo">
+      <RouterLink to="/home" class="logo">
         Curbi
       </RouterLink>
 
       <nav class="nav-links">
-        <RouterLink to="/">Home</RouterLink>
+        <RouterLink to="/home">Home</RouterLink>
         <RouterLink to="/urge">Urge Support</RouterLink>
         <RouterLink to="/help" class="nav-link">Find Support</RouterLink>
         <RouterLink to="/about">About</RouterLink>

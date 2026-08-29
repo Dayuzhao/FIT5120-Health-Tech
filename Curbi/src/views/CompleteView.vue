@@ -22,7 +22,7 @@
         </p>
       </div>
 
-      <RouterLink to="/" class="home-button">
+      <RouterLink to="/home" class="home-button">
         Back to Home
       </RouterLink>
 
