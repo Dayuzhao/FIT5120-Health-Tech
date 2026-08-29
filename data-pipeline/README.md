@@ -1,7 +1,14 @@
 # Curbi data pipeline
 
-Offline scripts that turn open datasets into static files bundled into the Curbi web app
-(`Curbi/public/data/`). Run manually on a developer machine; nothing here is deployed.
+Offline scripts that turn open datasets into static files for the Curbi app
+(`Curbi/public/data/`, bundled on-device) and its backend (`output/`, served by the API).
+Run manually on a developer machine; nothing here is deployed.
+
+| Script | Story | Output | Refresh |
+|---|---|---|---|
+| `npm run build:nhsd` | Epic 2 / US2 | `Curbi/public/data/nhsd-services.json` (bundled) | when a new NHSD snapshot ships |
+| `npm run build:postcodes` | Epic 2 / US2 | `Curbi/public/data/vic-postcodes.json` (bundled) | rarely (~annual) |
+| `npm run build:aihw` | Epic 4 / US4 | `output/regional-access.json` (served by backend) | annual (AIHW release ~May) |
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -114,3 +121,64 @@ npm run build:postcodes
 ```
 
 Current output: **3,482 entries, 696 distinct VIC postcodes, ~250 KB** (gzips to ~50 KB).
+
+---
+
+## AIHW — regional access snapshot (Epic 4 / US4)
+
+**Source:** AIHW *Medicare mental health services* annual data tables.
+Page: <https://www.aihw.gov.au/mental-health/resources/data-tables> → "Data tables: Medicare
+mental health services `<FY>`" (a ZIP). 2024–25 release published May 2026.
+**Licence:** open (AIHW; CC BY — confirm exact statement from the page and record in the DMP).
+
+Chosen after ruling out a quarterly source: no Australian dataset offers mental-health-specific
++ metro-vs-regional geography + quarterly refresh together. The AIHW quarterly *Activity
+Monitoring* report is state-level only and has no downloadable file; a hand-built MBS item list
+via Services Australia is a landmine (items 2712/2713 were renumbered late 2025, silently
+producing a bogus −20% "trend"). This annual PHN table is AIHW-curated (item mapping handled)
+and stable year to year.
+
+### Raw file
+
+- `input/Medicare-mental-health-service-<FY>.zip` (git-ignored; download it yourself).
+  The download URL carries a per-release `getmedia` GUID, so it is **not** hard-coded — grab
+  the current link from the Data tables page, or a human updates it each year.
+- The script reads the `Medicare mental health services PHN SA4 <FY>.csv` entry from inside
+  the ZIP. That CSV is **Windows-1252 encoded** and uses non-breaking spaces inside values
+  (`All providers`); `build-aihw.js` handles both.
+- Columns: `FinancialYear, GeographicAreaType (PHN|SA4), GeographicAreaCode, phnname,
+  ProviderType, Measure, Value`. Years 2015–16 to 2024–25.
+
+### Logic (`src/build-aihw.js`)
+
+Filter to `GeographicAreaType == PHN`, `ProviderType == "All providers"`, latest
+`FinancialYear`. Average the 3 Greater-Melbourne PHNs (North Western Melbourne, Eastern
+Melbourne, South Eastern Melbourne) and the 3 regional-Victoria PHNs (Gippsland, Murray,
+Western Victoria), for both rate measures. If a configured PHN name is missing in a release,
+the script errors (rather than averaging the wrong set).
+
+Output `output/regional-access.json`:
+
+```json
+{ "financialYear": "2024–25", "source": "...", "metroPhns": [...], "regionalPhns": [...],
+  "metrics": {
+    "serviceRatePer1000": { "metro": 569, "regional": 458, "gapPct": -19.6 },
+    "patientRatePer1000": { "metro": 111, "regional": 107, "gapPct": -3.9 } } }
+```
+
+Both measures are output; the team picks which the onboarding screen shows. **Service rate**
+= services delivered per 1,000 people (access + need mixed); **patient rate** = share of
+people who saw someone. The service-rate gap is the larger, more striking figure; the
+patient-rate gap is smaller but a cleaner "did people get in the door" measure.
+
+### Run
+
+```
+npm install
+npm run build:aihw
+```
+
+### Backend hand-off
+
+`output/regional-access.json` is consumed by the backend, served at `GET /api/regional-access`.
+The backend owner wires the schedule (annual) and the endpoint; this script is the ETL step.
