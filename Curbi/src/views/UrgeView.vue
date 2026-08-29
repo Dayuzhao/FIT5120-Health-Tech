@@ -65,7 +65,7 @@
         Find nearby support services
       </RouterLink>
 
-      <RouterLink to="/" class="secondary-link">
+      <RouterLink to="/home" class="secondary-link">
         Not right now
       </RouterLink>
 
