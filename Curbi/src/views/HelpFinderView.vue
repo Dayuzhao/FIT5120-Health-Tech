@@ -35,6 +35,18 @@
     </section>
 
     <section class="results-section">
+      <div class="status-card initial-state">
+        <span class="status-icon">⌖</span>
+
+        <div>
+           <h3>Start by entering your suburb or postcode</h3>
+
+           <p>
+              Search for a Victorian suburb or postcode to explore mental health support services nearby.
+           </p>
+        </div>
+      </div>
+
       <div class="results-heading">
         <div>
           <p class="eyebrow">NEARBY SERVICES</p>
@@ -77,6 +89,42 @@
           <button class="details-button" type="button">
             View details
           </button>
+
+          <div class="service-more">
+            <div class="detail-row">
+                <div>
+                <span class="detail-label">Service type</span>
+                <p>Community mental health support</p>
+                </div>
+
+                <div>
+                <span class="detail-label">Contact</span>
+                <p>03 9000 0000</p>
+                </div>
+            </div>
+
+            <div class="detail-row">
+                <div>
+                <span class="detail-label">Availability</span>
+                <p>Appointments may be required</p>
+                </div>
+
+                <div>
+                <span class="detail-label">Location</span>
+                <p>Clayton, Victoria</p>
+                </div>
+            </div>
+
+            <div class="service-description">
+                <span class="detail-label">About this service</span>
+
+                <p>
+                This is example content used to demonstrate how additional service
+                information can be presented. Final details will come from the project
+                service data.
+                </p>
+            </div>
+            </div>
         </article>
 
         <article class="service-card">
@@ -151,6 +199,59 @@
 </template>
 
 <style scoped>
+.initial-state {
+  border-style: dashed;
+  background: #f8faf8;
+}
+
+.service-more {
+  margin-top: 20px;
+  padding: 22px;
+  border-radius: 14px;
+  background: #f5f8f6;
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.detail-row > div {
+  min-width: 0;
+}
+
+.detail-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #758078;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.detail-row p,
+.service-description p {
+  margin: 0;
+  color: #4f5e54;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.service-description {
+  padding-top: 18px;
+  border-top: 1px solid #dfe7e1;
+}
+
+@media (max-width: 700px) {
+  .detail-row {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
 .status-card {
   display: flex;
   align-items: center;
