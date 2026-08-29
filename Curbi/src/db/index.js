@@ -39,9 +39,19 @@ db.version(1).stores({
 // startup, before the task screens read `tasks`.
 export async function ensureSeeded() {
   const count = await db.tasks.count()
-  if (count > 0) return
+
+  if (count > 0) {
+    return
+  }
+
   const now = Date.now()
+
   await db.tasks.bulkAdd(
-    seedTasks.map((t) => ({ ...t, source: 'seed', active: true, createdAt: now })),
+    seedTasks.map((task) => ({
+      ...task,
+      source: 'seed',
+      active: true,
+      createdAt: now,
+    })),
   )
 }

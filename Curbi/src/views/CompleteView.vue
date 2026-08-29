@@ -16,9 +16,9 @@
         <h2>A small step still counts</h2>
 
         <p>
-          The goal is not to remove every urge immediately. Creating even a
-          short pause can help you practise responding differently when the urge
-          appears.
+          The task has been recorded as completed. The goal is not to remove
+          every urge immediately. Creating even a short pause can help you
+          practise responding differently when the urge appears.
         </p>
       </div>
 
@@ -122,14 +122,10 @@ h1 {
   color: white;
   font-weight: 600;
   text-decoration: none;
-  transition:
-    transform 180ms ease,
-    background 180ms ease;
 }
 
 .home-button:hover {
   background: #416f50;
-  transform: translateY(-2px);
 }
 
 .another-option {

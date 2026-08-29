@@ -1,3 +1,86 @@
+<script setup>
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { db } from '@/db'
+
+const router = useRouter()
+
+const selectedUrge = ref(null)
+const starting = ref(false)
+const startError = ref('')
+
+const urges = [
+  {
+    id: 'search-symptoms',
+    icon: '🔍',
+    title: 'Search symptoms online',
+    description: 'I feel like Googling my symptoms again.',
+  },
+  {
+    id: 'check-body',
+    icon: '❤️',
+    title: 'Check my pulse or body',
+    description: 'I want to repeatedly check a physical sensation.',
+  },
+  {
+    id: 'check-change',
+    icon: '🪞',
+    title: 'Look at a physical change again',
+    description: 'I want to keep checking the same spot or body area.',
+  },
+  {
+    id: 'reassurance',
+    icon: '💬',
+    title: 'Ask someone for reassurance',
+    description: 'I want someone else to tell me that everything is okay.',
+  },
+  {
+    id: 'reread-health-info',
+    icon: '📄',
+    title: 'Re-read health information',
+    description: 'I want to check an old result, report or health page again.',
+  },
+]
+
+const canStart = computed(() => selectedUrge.value !== null)
+
+function selectUrge(urge) {
+  selectedUrge.value = urge
+  startError.value = ''
+}
+
+async function beginTask() {
+  if (starting.value) return
+
+  starting.value = true
+  startError.value = ''
+
+  try {
+    const now = Date.now()
+
+    const urgeEventId = await db.urgeEvents.add({
+      startedAt: now,
+      endedAt: null,
+      taskId: null,
+      outcome: null,
+      urgeType: selectedUrge.value?.id ?? null,
+    })
+
+    await router.push({
+      name: 'task',
+      query: {
+        urgeEventId: String(urgeEventId),
+      },
+    })
+  } catch (error) {
+    console.error('Unable to start urge event:', error)
+    startError.value = 'We could not start the task right now. Please try again.'
+  } finally {
+    starting.value = false
+  }
+}
+</script>
+
 <template>
   <main class="urge-page">
     <section class="urge-card">
@@ -11,55 +94,35 @@
       </p>
 
       <div class="urge-options">
-        <button class="urge-option" type="button">
-          <span class="option-icon">🔍</span>
+        <button
+          v-for="urge in urges"
+          :key="urge.id"
+          class="urge-option"
+          :class="{ selected: selectedUrge?.id === urge.id }"
+          type="button"
+          @click="selectUrge(urge)"
+        >
+          <span class="option-icon">{{ urge.icon }}</span>
 
           <div>
-            <h2>Search symptoms online</h2>
-            <p>I feel like Googling my symptoms again.</p>
-          </div>
-        </button>
-
-        <button class="urge-option" type="button">
-          <span class="option-icon">❤️</span>
-
-          <div>
-            <h2>Check my pulse or body</h2>
-            <p>I want to repeatedly check a physical sensation.</p>
-          </div>
-        </button>
-
-        <button class="urge-option" type="button">
-          <span class="option-icon">🪞</span>
-
-          <div>
-            <h2>Look at a physical change again</h2>
-            <p>I want to keep checking the same spot or body area.</p>
-          </div>
-        </button>
-
-        <button class="urge-option" type="button">
-          <span class="option-icon">💬</span>
-
-          <div>
-            <h2>Ask someone for reassurance</h2>
-            <p>I want someone else to tell me that everything is okay.</p>
-          </div>
-        </button>
-
-        <button class="urge-option" type="button">
-          <span class="option-icon">📄</span>
-
-          <div>
-            <h2>Re-read health information</h2>
-            <p>I want to check an old result, report or health page again.</p>
+            <h2>{{ urge.title }}</h2>
+            <p>{{ urge.description }}</p>
           </div>
         </button>
       </div>
 
-      <RouterLink to="/task" class="primary-button">
-        Find a task for me
-      </RouterLink>
+      <button
+        class="primary-button"
+        type="button"
+        :disabled="!canStart || starting"
+        @click="beginTask"
+      >
+        {{ starting ? 'Starting…' : 'Find a task for me' }}
+      </button>
+
+      <p v-if="startError" class="error-text" role="alert">
+        {{ startError }}
+      </p>
 
       <RouterLink to="/help" class="support-link">
         Find nearby support services
@@ -70,7 +133,8 @@
       </RouterLink>
 
       <p class="privacy-text">
-        No login or account is required. Your selections are not stored.
+        No login or account is required. Your urge selection stays on this
+        device.
       </p>
     </section>
   </main>
@@ -159,6 +223,11 @@ h1 {
   background: #f7faf8;
 }
 
+.urge-option.selected {
+  border-color: #5d856a;
+  background: #eef4ef;
+}
+
 .option-icon {
   font-size: 26px;
 }
@@ -177,23 +246,38 @@ h1 {
 }
 
 .primary-button {
+  width: 100%;
   display: block;
   margin-top: 28px;
   padding: 15px 22px;
+  border: 0;
   border-radius: 10px;
   background: #4f815f;
   color: white;
   text-align: center;
+  font: inherit;
   font-weight: 600;
-  text-decoration: none;
+  cursor: pointer;
   transition:
     transform 180ms ease,
     background 180ms ease;
 }
 
-.primary-button:hover {
+.primary-button:hover:not(:disabled) {
   background: #416f50;
   transform: translateY(-2px);
+}
+
+.primary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error-text {
+  margin: 12px 0 0;
+  color: #9a5d5d;
+  font-size: 14px;
+  text-align: center;
 }
 
 .secondary-link {
