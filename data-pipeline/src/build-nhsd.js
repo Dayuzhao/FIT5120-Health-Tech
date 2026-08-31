@@ -48,16 +48,20 @@ const DAYS = [
 // -----------------------------------------------------------------------------
 
 function findInputCsv() {
+  // input/ is shared with build-postcodes.js, so matching on the documented
+  // "nhsd" filename avoids picking up australian_postcodes.csv instead.
   const csvs = existsSync(inputDir)
-    ? readdirSync(inputDir).filter((f) => f.toLowerCase().endsWith('.csv'))
+    ? readdirSync(inputDir).filter(
+        (f) => /nhsd/i.test(f) && f.toLowerCase().endsWith('.csv'),
+      )
     : []
   if (csvs.length === 0) {
     console.error(
-      `No .csv in ${inputDir} — download the NHSD extract there first (see README.md).`,
+      `No "*nhsd*.csv" in ${inputDir} — download the NHSD extract there first (see README.md).`,
     )
     process.exit(1)
   }
-  if (csvs.length > 1) console.warn(`Multiple CSVs in input/, using: ${csvs[0]}`)
+  if (csvs.length > 1) console.warn(`Multiple matching CSVs in input/, using: ${csvs[0]}`)
   return join(inputDir, csvs[0])
 }
 
@@ -97,12 +101,21 @@ for (const r of rows) {
     continue
   }
 
-  const id = (r.nhsd_service_id || '').trim()
-  if (id && seen.has(id)) {
+  const address = (r.address || '').trim()
+  const suburb = (r.city || '').trim()
+  const postcode = (r.postcode || '').trim()
+
+  // NHSD gives each service record its own nhsd_service_id even when the same
+  // organisation at the same address repeats across many rows, so dedupe on the
+  // visible identity (name + address + suburb) instead of the source id.
+  const dedupeKey = `${name}|${address}|${suburb}`.toUpperCase()
+  if (seen.has(dedupeKey)) {
     stats.deduped++
     continue
   }
-  if (id) seen.add(id)
+  seen.add(dedupeKey)
+
+  const id = (r.nhsd_service_id || '').trim()
 
   const hours = {}
   for (const [key, col] of DAYS) {
@@ -113,9 +126,9 @@ for (const r of rows) {
   out.push({
     id,
     name,
-    address: (r.address || '').trim(),
-    suburb: (r.city || '').trim(),
-    postcode: (r.postcode || '').trim(),
+    address,
+    suburb,
+    postcode,
     state: r.state,
     lat,
     lon,
