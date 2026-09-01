@@ -180,5 +180,9 @@ npm run build:aihw
 
 ### Backend hand-off
 
-`output/regional-access.json` is consumed by the backend, served at `GET /api/regional-access`.
-The backend owner wires the schedule (annual) and the endpoint; this script is the ETL step.
+`GET /api/regional-access` is a proposed future interface, not implemented in this
+repository. No frontend or API integration is included in the commands below.
+
+The Fastify backend now owns update discovery, downloading, scheduling and API
+delivery. This script remains the unchanged ETL invoked by that backend. See
+`../backend/README.md` for the complete workflow and run commands.

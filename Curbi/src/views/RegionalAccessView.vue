@@ -1,3 +1,36 @@
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+
+const data = ref(null)
+const loading = ref(true)
+const error = ref(null)
+
+const serviceRates = computed(() => data.value?.metrics?.serviceRatePer1000)
+const regionalBarWidth = computed(() => {
+  const metro = serviceRates.value?.metro
+  const regional = serviceRates.value?.regional
+  if (!Number.isFinite(metro) || metro <= 0 || !Number.isFinite(regional)) return '0%'
+  return `${Math.min(100, Math.max(0, regional / metro * 100))}%`
+})
+
+onMounted(async () => {
+  try {
+    const response = await fetch('/api/regional-access')
+    if (!response.ok) throw new Error(`Request failed with HTTP ${response.status}`)
+    const result = await response.json()
+    const rates = result?.metrics?.serviceRatePer1000
+    if (!Number.isFinite(rates?.metro) || !Number.isFinite(rates?.regional) || !result.financialYear) {
+      throw new Error('Regional access data has an unexpected format')
+    }
+    data.value = result
+  } catch (requestError) {
+    error.value = requestError
+  } finally {
+    loading.value = false
+  }
+})
+</script>
+
 <template>
   <main class="access-page">
     <section class="access-hero">
@@ -22,14 +55,14 @@
           </h2>
         </div>
 
-        <span class="year-badge">2024–25</span>
+        <span v-if="data" class="year-badge">{{ data.financialYear }}</span>
       </div>
 
-      <div class="comparison-grid">
+      <div v-if="data" class="comparison-grid">
         <article class="stat-card">
           <p class="area-label">Metro Melbourne</p>
 
-          <div class="stat-value">569</div>
+          <div class="stat-value">{{ serviceRates.metro }}</div>
 
           <p class="stat-unit">
             services per 1,000 people
@@ -43,19 +76,19 @@
         <article class="stat-card">
           <p class="area-label">Regional Victoria</p>
 
-          <div class="stat-value">458</div>
+          <div class="stat-value">{{ serviceRates.regional }}</div>
 
           <p class="stat-unit">
             services per 1,000 people
           </p>
 
           <div class="stat-bar">
-            <div class="stat-fill regional-fill"></div>
+            <div class="stat-fill regional-fill" :style="{ width: regionalBarWidth }"></div>
           </div>
         </article>
       </div>
 
-      <div class="data-error">
+      <div v-if="error" class="data-error" role="alert">
         <div class="error-icon">!</div>
 
         <div class="error-copy">
@@ -67,7 +100,7 @@
         </div>
       </div>
 
-      <div class="comparison-note">
+      <div v-if="data" class="comparison-note">
         <div class="note-icon">i</div>
         <p>
           This comparison gives a simple overview of differences in service
@@ -76,7 +109,7 @@
         </p>
       </div>
 
-      <div class="data-loading">
+      <div v-if="loading" class="data-loading" aria-live="polite">
         <div class="loading-spinner"></div>
 
         <div class="loading-copy">
@@ -87,7 +120,7 @@
         </div>
       </div>
 
-      <div class="source-row">
+      <div v-if="data" class="source-row">
         <div>
           <span class="source-label">DATA SOURCE</span>
           <p>
@@ -98,7 +131,7 @@
         <div>
           <span class="source-label">FINANCIAL YEAR</span>
 
-          <p>2024–25</p>
+          <p>{{ data.financialYear }}</p>
         </div>
       </div>
     </section>
@@ -118,9 +151,8 @@
         </RouterLink>
     </section>
 
-    <p class="data-note">
-      Example values are currently shown for UI development. Final values will
-      be connected to the processed project dataset.
+    <p v-if="data" class="data-note">
+      Latest processed AIHW Medicare mental health services dataset.
     </p>
   </main>
 </template>
@@ -332,7 +364,7 @@ h1 {
 }
 
 .regional-fill {
-  width: 80%;
+  width: 0;
 }
 
 .comparison-note {
