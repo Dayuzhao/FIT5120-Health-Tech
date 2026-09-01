@@ -1,14 +1,23 @@
 # Curbi data pipeline
 
-Offline scripts that turn open datasets into static files for the Curbi app
-(`Curbi/public/data/`, bundled on-device) and its backend (`output/`, served by the API).
-Run manually on a developer machine; nothing here is deployed.
+Offline scripts that turn open datasets into files served by the backend (`output/`,
+imported into SQLite or read directly by the FastAPI app in `../backend`). Nothing
+here is bundled into the frontend build and nothing here is deployed — run manually
+on a developer machine, then re-run the relevant backend import step.
 
 | Script | Story | Output | Refresh |
 |---|---|---|---|
-| `npm run build:nhsd` | Epic 2 / US2 | `Curbi/public/data/nhsd-services.json` (bundled) | when a new NHSD snapshot ships |
-| `npm run build:postcodes` | Epic 2 / US2 | `Curbi/public/data/vic-postcodes.json` (bundled) | rarely (~annual) |
+| `npm run build:nhsd` | Epic 2 / US2 | `output/nhsd-services.json` → import with `python ../backend/build_nhsd_db.py` | when a new NHSD snapshot ships |
 | `npm run build:aihw` | Epic 4 / US4 | `output/regional-access.json` (served by backend) | annual (AIHW release ~May) |
+
+**Postcode/suburb lookup (Epic 2 / US2) is no longer built here.** It used to be a
+static `vic-postcodes.json` bundled into the frontend; it's now served live by the
+backend's `GET /api/v1/geocode` (numeric postcode → `postcodeapi.com.au`, suburb name
+→ an in-memory cache refreshed daily from the live Australian Postcodes feed — see
+`refresh_vic_postcode_cache()` in `../backend/main.py`). This closes the "data can't
+be hard-coded, must come from an API or database" requirement for both Epic 2 data
+sources: NHSD services now live in SQLite behind `/api/v1/services`, and postcode
+lookups are resolved live rather than from a file shipped in the app bundle.
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -43,8 +52,8 @@ Plan (Ethical / Legal / Privacy section).
    `psycholog|psychiatr|psychotherap|counsell|counselin|mental health|headspace`).
    - Misses services whose name doesn't state the profession (e.g. a GP clinic that also
      offers mental-health care, some social workers).
-   - Rare false positives: in the current VIC output, 2 of 2,698 records
-     ("Nutritional Psychology", "Rural Financial Counselling Service"). ~0.07%.
+   - Rare false positives: in the current VIC output, 2 of 1,308 records
+     ("Nutritional Psychology", "Rural Financial Counselling Service"). ~0.15%.
 2. **No phone / email / website column** in this extract. US2's acceptance criteria cannot
    show a phone number from this data — show name + address + suburb + opening hours instead.
 3. **`status` is not usable as an "is it operating" filter.** 88% of all rows read `CLOSED`,
@@ -58,7 +67,9 @@ Plan (Ethical / Legal / Privacy section).
 
 Keep a row when: `state == "VIC"` **and** the name matches the mental-health regex **and**
 `latitude`/`longitude` are finite numbers inside a loose Victoria bounding box.
-Not filtered on `status`. De-duplicated on `nhsd_service_id`. Sorted by name.
+Not filtered on `status`. De-duplicated on `name|address|suburb` (NHSD assigns a distinct
+`nhsd_service_id` to repeat rows for the same organisation at the same address, so the id
+itself doesn't dedupe them). Sorted by name.
 
 Output record: `{ id, name, address, suburb, postcode, state, lat, lon, hours? }`
 where `hours` is an object with only the populated days (`mon`..`sun`), omitted if none.
@@ -68,59 +79,15 @@ where `hours` is an object with only the populated days (`mon`..`sun`), omitted 
 ```
 npm install
 npm run build:nhsd
+python ../backend/build_nhsd_db.py
 ```
 
-Writes `../Curbi/public/data/nhsd-services.json` if the Curbi app scaffold is on this branch,
-otherwise `output/nhsd-services.json` (a review preview — canonical home is
-`Curbi/public/data/` once US1 is merged).
+Writes `output/nhsd-services.json`, then imports it into `../backend/data/nhsd.sqlite3`,
+which `GET /api/v1/services` (suburb/postcode exact match, or `near=lat:lon,...` for
+distance-sorted nearby results) queries at request time.
 
-Current VIC output: **2,698 services, ~912 KB** (gzips small; static, loaded once).
-
----
-
-## Postcodes — suburb/postcode → coordinate lookup (Epic 2 / US2)
-
-**Source:** *Australian Postcodes*, <https://www.matthewproctor.com/australian_postcodes>
-(GitHub: `matthewproctor/australianpostcodes`). Community-compiled from ABS and Australia
-Post data. **Licence: CC BY 4.0** — copy the exact statement from the site into the DMP.
-Postcodes change rarely (~annual), so this is effectively static.
-
-**Why it's here:** the Help Finder has no geolocation. This file turns the suburb or postcode
-the user types into a point, so services from `nhsd-services.json` can be sorted by distance
-(and nearby suburbs included), not just exact-string matched.
-
-### Raw file
-
-- `input/australian_postcodes.csv` — full Australia, ~8.5 MB, 18,559 rows (git-ignored;
-  download it into `input/` yourself). Columns used: `postcode`, `locality`, `state`, `lat`,
-  `long`, `type`. (Also carries SA3/SA4, PHN, remoteness and MMM fields — unused for now.)
-
-### Logic (`src/build-postcodes.js`)
-
-Keep rows where `state == "VIC"` **and** `type == "Delivery Area"` (drops PO-box / large-
-volume-receiver pseudo-postcodes) **and** coordinates are finite and inside a loose Victoria
-bounding box. De-duplicated on `postcode|suburb`. Coordinates rounded to 5 dp. Suburb
-upper-cased to match NHSD's `suburb`. Sorted by postcode then suburb.
-
-Output: array of `{ postcode, suburb, lat, lon }` → `Curbi/public/data/vic-postcodes.json`
-(or `output/` if the Curbi scaffold isn't on this branch yet).
-
-### Data caveats (for the DMP)
-
-- Australia Post assigns some CBD postcodes (3000/3001/3002/3004 …) the same delivery-area
-  centroid, so several distinct suburbs share one point — fine for a "roughly where is this"
-  lookup, not for precise geocoding.
-- One postcode maps to several suburbs and vice-versa; the output keeps every pair, so a
-  lookup can match on either field.
-
-### Run
-
-```
-npm install
-npm run build:postcodes
-```
-
-Current output: **3,482 entries, 696 distinct VIC postcodes, ~250 KB** (gzips to ~50 KB).
+Current VIC output: **1,308 services, ~442 KB** (small; queried via SQLite, not shipped
+to the browser).
 
 ---
 
