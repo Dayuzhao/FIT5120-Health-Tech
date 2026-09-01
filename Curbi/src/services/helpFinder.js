@@ -1,7 +1,4 @@
-const SERVICES_URL = '/data/nhsd-services.json'
-const POSTCODES_URL = '/data/vic-postcodes.json'
-
-const RESULT_LIMIT = 20
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 const DAY_ORDER = [
   ['mon', 'Monday'],
@@ -24,27 +21,6 @@ function normalisePostcode(value) {
   return normalise(value).replace(/\s/g, '')
 }
 
-export function distanceKm(lat1, lon1, lat2, lon2) {
-  const earthRadiusKm = 6371
-
-  const toRadians = (degrees) => (degrees * Math.PI) / 180
-
-  const dLat = toRadians(lat2 - lat1)
-  const dLon = toRadians(lon2 - lon1)
-
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRadians(lat1)) *
-      Math.cos(toRadians(lat2)) *
-      Math.sin(dLon / 2) ** 2
-
-  return (
-    earthRadiusKm *
-    2 *
-    Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  )
-}
-
 export function formatHours(hours) {
   if (!hours || typeof hours !== 'object') {
     return ''
@@ -56,144 +32,62 @@ export function formatHours(hours) {
     .join(' · ')
 }
 
-export async function loadHelpFinderData() {
-  const [servicesResponse, postcodesResponse] = await Promise.all([
-    fetch(SERVICES_URL),
-    fetch(POSTCODES_URL),
-  ])
-
-  if (!servicesResponse.ok) {
-    throw new Error('Unable to load NHSD service data')
-  }
-
-  if (!postcodesResponse.ok) {
-    throw new Error('Unable to load postcode data')
-  }
-
-  const [services, postcodes] = await Promise.all([
-    servicesResponse.json(),
-    postcodesResponse.json(),
-  ])
-
-  if (!Array.isArray(services)) {
-    throw new Error('NHSD service data has an invalid format')
-  }
-
-  if (!Array.isArray(postcodes)) {
-    throw new Error('Postcode data has an invalid format')
-  }
-
-  return {
-    services,
-    postcodes,
-  }
-}
-
-function findLocationMatches(query, postcodes) {
-  const trimmed = normalise(query)
-  const postcodeQuery = normalisePostcode(query)
-
-  if (!trimmed) {
-    return []
-  }
-
-  return postcodes.filter((entry) => {
-    const suburb = normalise(entry.suburb)
-    const postcode = normalisePostcode(entry.postcode)
-
-    return (
-      suburb === trimmed ||
-      postcode === postcodeQuery
-    )
-  })
-}
-
-function exactServiceMatches(query, services) {
-  const normalisedQuery = normalise(query)
-  const normalisedPostcodeQuery = normalisePostcode(query)
-
-  return services
-    .filter((service) => {
-      const suburbMatches =
-        normalise(service.suburb) === normalisedQuery
-
-      const postcodeMatches =
-        normalisePostcode(service.postcode) === normalisedPostcodeQuery
-
-      return suburbMatches || postcodeMatches
-    })
-    .map((service) => ({
-      ...service,
-      distanceKm: null,
-    }))
-}
-
-function nearbyServices(locationMatches, services) {
-  if (locationMatches.length === 0) {
-    return []
-  }
-
-  return services
-    .map((service) => {
-      let nearestDistance = Infinity
-
-      for (const location of locationMatches) {
-        const distance = distanceKm(
-          Number(location.lat),
-          Number(location.lon),
-          Number(service.lat),
-          Number(service.lon),
-        )
-
-        if (Number.isFinite(distance) && distance < nearestDistance) {
-          nearestDistance = distance
-        }
-      }
-
-      return {
-        ...service,
-        distanceKm: nearestDistance,
-      }
-    })
-    .filter((service) => Number.isFinite(service.distanceKm))
-    .sort((a, b) => a.distanceKm - b.distanceKm)
-    .slice(0, RESULT_LIMIT)
-}
-
-export function searchServices(query, services, postcodes) {
-  const locationMatches = findLocationMatches(query, postcodes)
-
-  if (locationMatches.length > 0) {
-    return {
-      mode: 'distance',
-      locationMatches,
-      results: nearbyServices(locationMatches, services),
-    }
-  }
-
-  return {
-    mode: 'exact',
-    locationMatches: [],
-    results: exactServiceMatches(query, services),
-  }
-}
-
-export function getServiceDistanceLabel(distance) {
-  if (!Number.isFinite(distance)) {
+export function getServiceDistanceLabel(distanceKm) {
+  if (!Number.isFinite(distanceKm)) {
     return ''
   }
 
-  if (distance < 1) {
-    return `${Math.round(distance * 1000)} m`
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)} m`
   }
 
-  return `${distance.toFixed(1)} km`
+  return `${distanceKm.toFixed(1)} km`
 }
 
 export function formatService(service) {
   return {
     ...service,
-    distanceLabel: getServiceDistanceLabel(service.distanceKm),
+    distanceKm: service.distance_km,
+    distanceLabel: getServiceDistanceLabel(service.distance_km),
     openingHours: formatHours(service.hours),
   }
+}
+
+async function fetchJson(path) {
+  const response = await fetch(`${API_BASE_URL}${path}`)
+  if (!response.ok) {
+    throw new Error(`Request to ${path} failed with status ${response.status}`)
+  }
+  return response.json()
+}
+
+// A suburb name or postcode can resolve to several suburb centroids that
+// share the same postcode (e.g. some CBD-adjacent postcodes), so geocode
+// returns a list; the caller measures distance to the nearest of them.
+async function geocodeQuery(query) {
+  const { matches } = await fetchJson(`/api/v1/geocode?q=${encodeURIComponent(query)}`)
+  return matches
+}
+
+export async function searchServices(query) {
+  const trimmed = query.trim()
+
+  if (!trimmed) {
+    return { mode: 'exact', locationMatches: [], results: [] }
+  }
+
+  const locationMatches = await geocodeQuery(trimmed)
+
+  if (locationMatches.length > 0) {
+    const near = locationMatches.map((match) => `${match.lat}:${match.lon}`).join(',')
+    const { results } = await fetchJson(`/api/v1/services?near=${encodeURIComponent(near)}`)
+    return { mode: 'distance', locationMatches, results }
+  }
+
+  const params = new URLSearchParams({
+    suburb: normalise(trimmed),
+    postcode: normalisePostcode(trimmed),
+  })
+  const { results } = await fetchJson(`/api/v1/services?${params.toString()}`)
+  return { mode: 'exact', locationMatches: [], results }
 }

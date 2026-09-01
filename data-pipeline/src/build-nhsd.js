@@ -139,11 +139,9 @@ for (const r of rows) {
 out.sort((a, b) => a.name.localeCompare(b.name))
 stats.kept = out.length
 
-// Write into the app if the Curbi scaffold is on this branch yet, else to ./output.
-const appPublic = join(here, '..', '..', 'Curbi', 'public')
-const outDir = existsSync(appPublic)
-  ? join(appPublic, 'data')
-  : join(here, '..', 'output')
+// output/ is the single source of truth: backend/build_nhsd_db.py imports it into
+// SQLite, which /api/v1/services serves. The frontend no longer bundles this file.
+const outDir = join(here, '..', 'output')
 mkdirSync(outDir, { recursive: true })
 const outPath = join(outDir, 'nhsd-services.json')
 writeFileSync(outPath, JSON.stringify(out))
