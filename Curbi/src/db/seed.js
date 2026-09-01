@@ -56,4 +56,24 @@ export const seedTasks = [
     title: 'One real task',
     body: 'Do one three-minute job from your actual to-do list — dishes, laundry, a reply.',
   },
+  {
+    title: 'Delay the check',
+    body: 'Set a 10-minute timer before you check again.',
+  },
+  {
+    title: 'Water a plant',
+    body: 'Give a houseplant some water, or wipe the dust off its leaves.',
+  },
+  {
+    title: 'Empty one bin',
+    body: 'Take the rubbish out from one bin in your home.',
+  },
+  {
+    title: 'Charge something',
+    body: 'Plug in your phone, headphones, or anything sitting uncharged.',
+  },
+  {
+    title: 'Sort five things',
+    body: 'Pick up five loose items lying around and put each one back where it belongs.',
+  },
 ]
