@@ -1,19 +1,12 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
-import {
-  formatService,
-  loadHelpFinderData,
-  searchServices,
-} from '@/services/helpFinder'
+import { formatService, searchServices } from '@/services/helpFinder'
 
 const query = ref('')
 
-const services = ref([])
-const postcodes = ref([])
 const results = ref([])
 
-const loading = ref(true)
 const searching = ref(false)
 const error = ref('')
 
@@ -45,24 +38,6 @@ function toggleDetails(serviceId) {
     expandedServiceId.value === serviceId ? null : serviceId
 }
 
-async function loadData() {
-  loading.value = true
-  error.value = ''
-
-  try {
-    const data = await loadHelpFinderData()
-
-    services.value = data.services
-    postcodes.value = data.postcodes
-  } catch (loadError) {
-    console.error('Unable to load Help Finder data:', loadError)
-    error.value =
-      'We could not load the service directory right now. Please try again.'
-  } finally {
-    loading.value = false
-  }
-}
-
 async function performSearch() {
   if (!canSearch.value || searching.value) {
     return
@@ -74,11 +49,7 @@ async function performSearch() {
   hasSearched.value = true
 
   try {
-    const search = searchServices(
-      query.value,
-      services.value,
-      postcodes.value,
-    )
+    const search = await searchServices(query.value)
 
     searchMode.value = search.mode
     results.value = search.results.map(formatService)
@@ -95,8 +66,6 @@ async function performSearch() {
 function handleSubmit() {
   performSearch()
 }
-
-onMounted(loadData)
 </script>
 
 <template>
@@ -130,14 +99,14 @@ onMounted(loadData)
             type="text"
             autocomplete="postal-code"
             placeholder="e.g. Clayton or 3168"
-            :disabled="loading || searching"
+            :disabled="searching"
           />
         </div>
 
         <button
           class="search-button"
           type="submit"
-          :disabled="!canSearch || loading || searching"
+          :disabled="!canSearch || searching"
         >
           {{ searching ? 'Searching…' : 'Search' }}
         </button>
@@ -145,25 +114,14 @@ onMounted(loadData)
     </section>
 
     <section class="results-section">
-      <div v-if="loading" class="status-card">
-        <div class="loading-circle"></div>
-
-        <div>
-          <h3>Loading support services</h3>
-          <p>
-            Curbi is loading the bundled Victorian service directory.
-          </p>
-        </div>
-      </div>
-
-      <div v-else-if="error" class="status-card error-state" role="alert">
+      <div v-if="error" class="status-card error-state" role="alert">
         <span class="status-icon">!</span>
 
         <div>
           <h3>Something went wrong</h3>
           <p>{{ error }}</p>
 
-          <button class="retry-button" type="button" @click="loadData">
+          <button class="retry-button" type="button" @click="performSearch">
             Try again
           </button>
         </div>
