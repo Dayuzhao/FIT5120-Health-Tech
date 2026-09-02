@@ -1,3 +1,37 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+
+import { fetchRegionalAccess } from '@/services/regionalAccess'
+
+const loading = ref(true)
+const failed = ref(false)
+const snapshot = ref(null)
+
+// AC1 asks specifically for the Medicare mental health service rate per 1,000
+// population, so the view reads that metric and ignores the others the API returns.
+const serviceRate = computed(() => snapshot.value?.metrics?.serviceRatePer1000 ?? null)
+
+// Draw the regional bar as a proportion of the metro bar for the visual comparison.
+const regionalBarWidth = computed(() => {
+  if (!serviceRate.value) {
+    return '0%'
+  }
+
+  return `${Math.round((serviceRate.value.regional / serviceRate.value.metro) * 100)}%`
+})
+
+onMounted(async () => {
+  try {
+    snapshot.value = await fetchRegionalAccess()
+  } catch (error) {
+    console.error('Unable to load the regional access snapshot:', error)
+    failed.value = true
+  } finally {
+    loading.value = false
+  }
+})
+</script>
+
 <template>
   <main class="access-page">
     <section class="access-hero">
@@ -22,85 +56,87 @@
           </h2>
         </div>
 
-        <span class="year-badge">2024–25</span>
+        <span v-if="serviceRate" class="year-badge">
+          {{ snapshot.financialYear }}
+        </span>
       </div>
 
-      <div class="comparison-grid">
-        <article class="stat-card">
-          <p class="area-label">Metro Melbourne</p>
-
-          <div class="stat-value">569</div>
-
-          <p class="stat-unit">
-            services per 1,000 people
-          </p>
-
-          <div class="stat-bar">
-            <div class="stat-fill metro-fill"></div>
-          </div>
-        </article>
-
-        <article class="stat-card">
-          <p class="area-label">Regional Victoria</p>
-
-          <div class="stat-value">458</div>
-
-          <p class="stat-unit">
-            services per 1,000 people
-          </p>
-
-          <div class="stat-bar">
-            <div class="stat-fill regional-fill"></div>
-          </div>
-        </article>
-      </div>
-
-      <div class="data-error">
-        <div class="error-icon">!</div>
-
-        <div class="error-copy">
-            <h3>Comparison data is temporarily unavailable</h3>
-            <p>
-            We couldn't load the regional access comparison right now.
-            You can still continue to Curbi.
-            </p>
-        </div>
-      </div>
-
-      <div class="comparison-note">
-        <div class="note-icon">i</div>
-        <p>
-          This comparison gives a simple overview of differences in service
-          access across Victoria. It is shown during onboarding and does not use
-          your location.
-        </p>
-      </div>
-
-      <div class="data-loading">
+      <div v-if="loading" class="data-loading">
         <div class="loading-spinner"></div>
 
         <div class="loading-copy">
-            <h3>Loading comparison data</h3>
-            <p>
+          <h3>Loading comparison data</h3>
+          <p>
             Please wait while Curbi prepares the regional access snapshot.
-            </p>
+          </p>
         </div>
       </div>
 
-      <div class="source-row">
-        <div>
-          <span class="source-label">DATA SOURCE</span>
+      <div v-else-if="failed || !serviceRate" class="data-error">
+        <div class="error-icon">!</div>
+
+        <div class="error-copy">
+          <h3>Comparison data is temporarily unavailable</h3>
           <p>
-            Australian Institute of Health and Welfare (AIHW)
+            We couldn't load the regional access comparison right now.
+            You can still continue to Curbi.
+          </p>
+        </div>
+      </div>
+
+      <template v-else>
+        <div class="comparison-grid">
+          <article class="stat-card">
+            <p class="area-label">Metro Melbourne</p>
+
+            <div class="stat-value">{{ serviceRate.metro }}</div>
+
+            <p class="stat-unit">
+              services per 1,000 people
+            </p>
+
+            <div class="stat-bar">
+              <div class="stat-fill" :style="{ width: '100%' }"></div>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <p class="area-label">Regional Victoria</p>
+
+            <div class="stat-value">{{ serviceRate.regional }}</div>
+
+            <p class="stat-unit">
+              services per 1,000 people
+            </p>
+
+            <div class="stat-bar">
+              <div class="stat-fill" :style="{ width: regionalBarWidth }"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="comparison-note">
+          <div class="note-icon">i</div>
+          <p>
+            This comparison gives a simple overview of differences in service
+            access across Victoria. It is shown during onboarding and does not use
+            your location.
           </p>
         </div>
 
-        <div>
-          <span class="source-label">FINANCIAL YEAR</span>
+        <div class="source-row">
+          <div>
+            <span class="source-label">DATA SOURCE</span>
+            <p>{{ snapshot.source }}</p>
+          </div>
 
-          <p>2024–25</p>
+          <div>
+            <span class="source-label">FINANCIAL YEAR</span>
+
+            <p>{{ snapshot.financialYear }}</p>
+          </div>
         </div>
-      </div>
+      </template>
     </section>
 
     <section class="continue-section">
@@ -113,15 +149,10 @@
         </p>
       </div>
 
-        <RouterLink to="/home" class="continue-button">
-          Get started
-        </RouterLink>
+      <RouterLink to="/home" class="continue-button">
+        Get started
+      </RouterLink>
     </section>
-
-    <p class="data-note">
-      Example values are currently shown for UI development. Final values will
-      be connected to the processed project dataset.
-    </p>
   </main>
 </template>
 
@@ -327,14 +358,6 @@ h1 {
   background: #6f9778;
 }
 
-.metro-fill {
-  width: 100%;
-}
-
-.regional-fill {
-  width: 80%;
-}
-
 .comparison-note {
   display: flex;
   align-items: flex-start;
@@ -422,14 +445,6 @@ h1 {
 .continue-button:hover {
   background: #416f50;
   transform: translateY(-2px);
-}
-
-.data-note {
-  margin: 22px 0 0;
-  color: #89918b;
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: center;
 }
 
 @media (max-width: 760px) {
