@@ -51,6 +51,20 @@ CREATE TABLE IF NOT EXISTS postcodes (
     PRIMARY KEY (postcode, suburb)
 );
 CREATE INDEX IF NOT EXISTS idx_postcodes_suburb ON postcodes (suburb);
+
+-- Epic 4 / US4 onboarding snapshot: one row per (financial year, measure), so a
+-- new AIHW release just adds rows. AC1 uses serviceRatePer1000; patientRatePer1000
+-- is loaded too since build-aihw.js already computes it.
+CREATE TABLE IF NOT EXISTS regional_access (
+    financial_year  TEXT NOT NULL,
+    metric          TEXT NOT NULL,
+    metro           DOUBLE PRECISION NOT NULL,
+    regional        DOUBLE PRECISION NOT NULL,
+    gap_pct         DOUBLE PRECISION,
+    source          TEXT NOT NULL,
+    source_url      TEXT,
+    PRIMARY KEY (financial_year, metric)
+);
 """
 
 # Small pool: the endpoints are sync `def`, RDS db.t4g.micro allows ~80
