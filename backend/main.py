@@ -8,7 +8,6 @@ import logging
 import math
 import os
 import re
-import sqlite3
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,6 +19,9 @@ import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from psycopg.rows import dict_row
+
+from db import connection, init_schema, pool
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -29,16 +31,10 @@ AIHW_DOWNLOAD_BASE_URL = os.getenv("AIHW_DOWNLOAD_BASE_URL", "https://www.aihw.g
 REFRESH_HOURS = int(os.getenv("AIHW_REFRESH_HOURS", "24"))
 REQUEST_TIMEOUT_SECONDS = 20
 
-# --- Epic 2 / US2: NHSD services (SQLite) + live postcode/suburb geocoding ---
-NHSD_DB_FILE = BASE_DIR / "data" / "nhsd.sqlite3"
-POSTCODEAPI_BASE_URL = os.getenv("POSTCODEAPI_BASE_URL", "https://v0.postcodeapi.com.au")
-# Community-compiled AU postcode list (CC BY 4.0); used only to resolve a typed
-# suburb NAME to coordinates. postcodeapi.com.au has no suburb-name endpoint,
-# only numeric postcode, so that live API alone can't cover suburb-name search.
-POSTCODE_SOURCE_URL = os.getenv(
-    "POSTCODE_SOURCE_URL", "https://www.matthewproctor.com/Content/postcodes/australian_postcodes.json"
-)
-POSTCODE_REFRESH_HOURS = int(os.getenv("POSTCODE_REFRESH_HOURS", "24"))
+# --- Epic 2 / US2: NHSD services + suburb/postcode geocoding, both from Postgres ---
+# Services live in the `services` table and postcode/suburb coordinates in the
+# `postcodes` table (see db.py); the unit requires this data to be read from a
+# hosted relational database in real time rather than a bundled or fetched file.
 SERVICE_RESULT_LIMIT = 20
 EARTH_RADIUS_KM = 6371
 
@@ -46,10 +42,6 @@ logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 cache_lock = Lock()
 snapshot: dict[str, Any] = {}
-
-postcode_cache_lock = Lock()
-vic_postcodes: list[dict[str, Any]] = []
-postcodeapi_result_cache: dict[str, list[dict[str, Any]]] = {}
 
 
 def load_cached_snapshot() -> dict[str, Any]:
@@ -188,68 +180,9 @@ def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return EARTH_RADIUS_KM * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-def refresh_vic_postcode_cache() -> None:
-    """Refresh the suburb-name -> coordinate lookup from the live Australian Postcodes feed.
-
-    Only used for suburb-NAME geocode queries; numeric postcodes go straight to
-    postcodeapi.com.au instead (see geocode()).
-    """
-    try:
-        response = requests.get(POSTCODE_SOURCE_URL, timeout=REQUEST_TIMEOUT_SECONDS)
-        response.raise_for_status()
-        rows = response.json()
-        vic_rows = [
-            {
-                "suburb": str(row.get("locality", "")).strip().upper(),
-                "postcode": str(row.get("postcode", "")).strip(),
-                "lat": float(row["lat"]),
-                "lon": float(row["long"]),
-            }
-            for row in rows
-            if row.get("state") == "VIC" and row.get("type") == "Delivery Area" and row.get("lat") and row.get("long")
-        ]
-        with postcode_cache_lock:
-            vic_postcodes.clear()
-            vic_postcodes.extend(vic_rows)
-        logger.info("VIC postcode cache refreshed: %d entries", len(vic_rows))
-    except (requests.RequestException, ValueError, KeyError, json.JSONDecodeError) as error:
-        logger.warning("Postcode cache refresh failed; retaining previous cache: %s", error)
-
-
-def geocode_by_postcode(postcode: str) -> list[dict[str, Any]]:
-    """Call postcodeapi.com.au for a numeric postcode. Cached in-process (postcodes
-    essentially never move) to stay well under its 100 requests/hour limit."""
-    if postcode in postcodeapi_result_cache:
-        return postcodeapi_result_cache[postcode]
-
-    response = requests.get(f"{POSTCODEAPI_BASE_URL}/suburbs/{postcode}.json", timeout=REQUEST_TIMEOUT_SECONDS)
-    response.raise_for_status()
-    matches = [
-        {
-            "suburb": str(item["name"]).strip().upper(),
-            "postcode": str(item["postcode"]),
-            "lat": item["latitude"],
-            "lon": item["longitude"],
-        }
-        for item in response.json()
-        if item.get("name") is not None
-    ]
-    postcodeapi_result_cache[postcode] = matches
-    return matches
-
-
-def geocode_by_suburb(suburb: str) -> list[dict[str, Any]]:
-    with postcode_cache_lock:
-        return [entry for entry in vic_postcodes if entry["suburb"] == suburb]
-
-
-def query_nhsd_connection() -> sqlite3.Connection:
-    connection = sqlite3.connect(NHSD_DB_FILE)
-    connection.row_factory = sqlite3.Row
-    return connection
-
-
-def service_row_to_dict(row: sqlite3.Row, distance_km: float | None) -> dict[str, Any]:
+def service_row_to_dict(row: dict[str, Any], distance_km: float | None) -> dict[str, Any]:
+    """Shape one `services` row for the API. `hours` is a JSONB column, so psycopg
+    already returns it as a dict (or None)."""
     return {
         "id": row["id"],
         "name": row["name"],
@@ -259,7 +192,7 @@ def service_row_to_dict(row: sqlite3.Row, distance_km: float | None) -> dict[str
         "state": row["state"],
         "lat": row["lat"],
         "lon": row["lon"],
-        "hours": json.loads(row["hours_json"]) if row["hours_json"] else None,
+        "hours": row["hours"],
         "distance_km": round(distance_km, 3) if distance_km is not None else None,
     }
 
@@ -277,16 +210,10 @@ scheduler = BackgroundScheduler()
 
 @app.on_event("startup")
 def start_scheduler() -> None:
+    pool.open()
+    init_schema()
     snapshot.update(load_cached_snapshot())
-    refresh_vic_postcode_cache()
     scheduler.add_job(refresh_from_aihw, "interval", hours=REFRESH_HOURS, id="aihw-refresh", replace_existing=True)
-    scheduler.add_job(
-        refresh_vic_postcode_cache,
-        "interval",
-        hours=POSTCODE_REFRESH_HOURS,
-        id="postcode-refresh",
-        replace_existing=True,
-    )
     scheduler.start()
 
 
@@ -294,6 +221,7 @@ def start_scheduler() -> None:
 def stop_scheduler() -> None:
     if scheduler.running:
         scheduler.shutdown(wait=False)
+    pool.close()
 
 
 @app.get("/api/v1/access-snapshot")
@@ -308,19 +236,23 @@ def get_access_snapshot() -> dict[str, Any]:
 
 @app.get("/api/v1/geocode")
 def geocode(q: str) -> dict[str, Any]:
-    """Resolve a typed suburb name or postcode to coordinates. Epic 2 / US2 Help Finder."""
+    """Resolve a typed suburb name or postcode to coordinates via the `postcodes`
+    table. A postcode can cover several suburb centroids, so this returns a list.
+    Epic 2 / US2 Help Finder."""
     query = q.strip()
     if not query:
         raise HTTPException(status_code=400, detail="q is required")
 
-    try:
-        if query.isdigit():
-            matches = geocode_by_postcode(query)
-        else:
-            matches = geocode_by_suburb(query.upper())
-    except requests.RequestException as error:
-        logger.warning("postcodeapi.com.au lookup failed for %r: %s", query, error)
-        raise HTTPException(status_code=502, detail="Postcode lookup service is unavailable") from error
+    if query.isdigit():
+        sql = "SELECT suburb, postcode, lat, lon FROM postcodes WHERE postcode = %s ORDER BY suburb"
+        param = query
+    else:
+        sql = "SELECT suburb, postcode, lat, lon FROM postcodes WHERE suburb = %s ORDER BY postcode"
+        param = query.upper()
+
+    with connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
+            matches = cursor.execute(sql, (param,)).fetchall()
 
     return {"query": query, "matches": matches}
 
@@ -343,33 +275,36 @@ def get_services(
     limit: int = SERVICE_RESULT_LIMIT,
 ) -> dict[str, Any]:
     """Nearby-by-distance (near=lat:lon,...) or exact suburb/postcode match. Epic 2 / US2 Help Finder."""
-    connection = query_nhsd_connection()
-    try:
-        if near:
-            try:
-                points = parse_near_points(near)
-            except ValueError as error:
-                raise HTTPException(status_code=400, detail="near must be lat:lon,lat:lon,...") from error
+    columns = "id, name, address, suburb, postcode, state, lat, lon, hours"
 
-            rows = connection.execute("SELECT * FROM services").fetchall()
-            scored = [
-                (row, min(haversine_km(lat, lon, row["lat"], row["lon"]) for lat, lon in points))
-                for row in rows
-            ]
-            scored.sort(key=lambda pair: pair[1])
-            results = [service_row_to_dict(row, distance) for row, distance in scored[:limit]]
-            mode = "distance"
-        elif suburb or postcode:
-            rows = connection.execute(
-                "SELECT * FROM services WHERE UPPER(suburb) = UPPER(:suburb) OR postcode = :postcode",
-                {"suburb": suburb or "", "postcode": (postcode or "").strip()},
-            ).fetchall()
-            results = [service_row_to_dict(row, None) for row in rows]
-            mode = "exact"
-        else:
-            raise HTTPException(status_code=400, detail="Provide suburb/postcode or lat/lon")
-    finally:
-        connection.close()
+    with connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
+            if near:
+                try:
+                    points = parse_near_points(near)
+                except ValueError as error:
+                    raise HTTPException(status_code=400, detail="near must be lat:lon,lat:lon,...") from error
+
+                # ~1,300 VIC rows — small enough to sort by haversine in Python
+                # and avoid a PostGIS dependency.
+                rows = cursor.execute(f"SELECT {columns} FROM services").fetchall()
+                scored = [
+                    (row, min(haversine_km(lat, lon, row["lat"], row["lon"]) for lat, lon in points))
+                    for row in rows
+                ]
+                scored.sort(key=lambda pair: pair[1])
+                results = [service_row_to_dict(row, distance) for row, distance in scored[:limit]]
+                mode = "distance"
+            elif suburb or postcode:
+                rows = cursor.execute(
+                    f"SELECT {columns} FROM services "
+                    "WHERE UPPER(suburb) = UPPER(%(suburb)s) OR postcode = %(postcode)s",
+                    {"suburb": suburb or "", "postcode": (postcode or "").strip()},
+                ).fetchall()
+                results = [service_row_to_dict(row, None) for row in rows]
+                mode = "exact"
+            else:
+                raise HTTPException(status_code=400, detail="Provide suburb/postcode or lat/lon")
 
     return {"mode": mode, "results": results}
 

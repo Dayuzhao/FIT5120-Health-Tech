@@ -1,71 +1,68 @@
-"""Import nhsd-services.json (produced by data-pipeline/src/build-nhsd.js) into
-a local SQLite database, so /api/v1/services can query it instead of the
-frontend fetching a static bundled JSON file.
+"""Load nhsd-services.json (produced by data-pipeline/src/build-nhsd.js) into the
+`services` table of the hosted PostgreSQL database, so /api/v1/services queries it
+in real time instead of the app shipping a static JSON file.
 
-Rerun this after a new NHSD snapshot is built:
+Re-runnable at any time: it upserts on the primary key, so a refreshed NHSD
+snapshot updates changed rows and adds new ones without dropping the table.
+
     python build_nhsd_db.py
 """
 
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
+
+import psycopg
+from psycopg.types.json import Jsonb
+
+from db import DATABASE_URL, init_schema
 
 BASE_DIR = Path(__file__).resolve().parent
 SOURCE_JSON = BASE_DIR.parent / "data-pipeline" / "output" / "nhsd-services.json"
-DB_FILE = BASE_DIR / "data" / "nhsd.sqlite3"
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS services (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    address TEXT,
-    suburb TEXT NOT NULL,
-    postcode TEXT NOT NULL,
-    state TEXT NOT NULL,
-    lat REAL NOT NULL,
-    lon REAL NOT NULL,
-    hours_json TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_services_suburb ON services (suburb);
-CREATE INDEX IF NOT EXISTS idx_services_postcode ON services (postcode);
+UPSERT = """
+INSERT INTO services (id, name, address, suburb, postcode, state, lat, lon, hours)
+VALUES (%(id)s, %(name)s, %(address)s, %(suburb)s, %(postcode)s, %(state)s,
+        %(lat)s, %(lon)s, %(hours)s)
+ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    address = EXCLUDED.address,
+    suburb = EXCLUDED.suburb,
+    postcode = EXCLUDED.postcode,
+    state = EXCLUDED.state,
+    lat = EXCLUDED.lat,
+    lon = EXCLUDED.lon,
+    hours = EXCLUDED.hours
 """
 
 
 def main() -> None:
     services = json.loads(SOURCE_JSON.read_text(encoding="utf-8"))
+    init_schema()
 
-    DB_FILE.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(DB_FILE)
-    try:
-        connection.executescript(SCHEMA)
-        connection.execute("DELETE FROM services")
-        connection.executemany(
-            """
-            INSERT INTO services (id, name, address, suburb, postcode, state, lat, lon, hours_json)
-            VALUES (:id, :name, :address, :suburb, :postcode, :state, :lat, :lon, :hours_json)
-            """,
-            (
-                {
-                    "id": service["id"],
-                    "name": service["name"],
-                    "address": service.get("address", ""),
-                    "suburb": service["suburb"],
-                    "postcode": service["postcode"],
-                    "state": service["state"],
-                    "lat": service["lat"],
-                    "lon": service["lon"],
-                    "hours_json": json.dumps(service["hours"]) if service.get("hours") else None,
-                }
-                for service in services
-            ),
-        )
+    with psycopg.connect(DATABASE_URL) as connection:
+        with connection.cursor() as cursor:
+            cursor.executemany(
+                UPSERT,
+                [
+                    {
+                        "id": service["id"],
+                        "name": service["name"],
+                        "address": service.get("address", ""),
+                        "suburb": service["suburb"],
+                        "postcode": service["postcode"],
+                        "state": service["state"],
+                        "lat": service["lat"],
+                        "lon": service["lon"],
+                        "hours": Jsonb(service["hours"]) if service.get("hours") else None,
+                    }
+                    for service in services
+                ],
+            )
         connection.commit()
         count = connection.execute("SELECT COUNT(*) FROM services").fetchone()[0]
-        print(f"Imported {count} services into {DB_FILE}")
-    finally:
-        connection.close()
+        print(f"Upserted {len(services)} records; services table now holds {count} rows")
 
 
 if __name__ == "__main__":
