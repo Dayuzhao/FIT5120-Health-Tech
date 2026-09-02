@@ -139,8 +139,9 @@ for (const r of rows) {
 out.sort((a, b) => a.name.localeCompare(b.name))
 stats.kept = out.length
 
-// output/ is the single source of truth: backend/build_nhsd_db.py imports it into
-// SQLite, which /api/v1/services serves. The frontend no longer bundles this file.
+// This file is an intermediate build artifact, not the served copy:
+// backend/build_nhsd_db.py upserts it into the Postgres `services` table, which
+// /api/v1/services reads at request time.
 const outDir = join(here, '..', 'output')
 mkdirSync(outDir, { recursive: true })
 const outPath = join(outDir, 'nhsd-services.json')
