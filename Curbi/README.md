@@ -1,38 +1,44 @@
-# Curbi
+# Curbi — web app
 
-This template should help get you started developing with Vue 3 in Vite.
+The Vue 3 front end for Curbi. See the repository root `README.md` for the
+project overview and how the front end, backend and data pipeline fit together.
 
-## Recommended IDE Setup
+## What's here
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- **Routing** (`src/router/index.js`) — the onboarding snapshot at `/`, then the
+  main flow: `/home`, `/urge`, `/task`, `/complete`, plus `/help` (Help Finder),
+  `/about`, `/contact`.
+- **On-device store** (`src/db/`) — a Dexie (IndexedDB) database holding the
+  user's coping tasks, checking-urge events and task completions. This never
+  leaves the browser and is never sent to the backend.
+- **Backend services** (`src/services/`) — thin `fetch` wrappers over the API:
+  - `helpFinder.js` — geocode a typed suburb/postcode, then list nearby mental
+    health services by distance (`/api/v1/geocode`, `/api/v1/services`).
+  - `regionalAccess.js` — the onboarding regional-vs-metro access snapshot
+    (`/api/v1/regional-access`).
 
-## Recommended Browser Setup
+## Backend dependency
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+The data-driven views expect the FastAPI backend (see `../backend`) to be
+running. `VITE_API_BASE_URL` sets its base URL:
 
-## Customize configuration
+- local dev: leave unset — defaults to `http://localhost:8000`
+- production: set it at build time to the deployed backend URL
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+Copy `.env.example` to `.env.local` to override locally.
 
-## Project Setup
+## Setup
 
 ```sh
 npm install
+npm run dev       # http://localhost:5173, hot reload
+npm run build     # production build into dist/
+npm run preview   # serve the production build locally
+npm run format    # Prettier over src/
 ```
 
-### Compile and Hot-Reload for Development
+## Recommended IDE setup
 
-```sh
-npm run dev
-```
-
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+[VS Code](https://code.visualstudio.com/) +
+[Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+(disable Vetur). Config reference: [Vite](https://vite.dev/config/).

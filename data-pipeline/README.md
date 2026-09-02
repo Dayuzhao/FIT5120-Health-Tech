@@ -15,12 +15,14 @@ loaders upsert, so re-running them adds/updates rows without a wipe).
 |---|---|---|---|
 | `npm run build:nhsd` → `output/nhsd-services.json` | `python ../backend/build_nhsd_db.py` → `services` table | Epic 2 / US2 | when a new NHSD snapshot ships |
 | `npm run build:postcodes` → `output/vic-postcodes.json` | `python ../backend/build_postcodes_db.py` → `postcodes` table | Epic 2 / US2 | rarely (postcodes barely move) |
-| `npm run build:aihw` → `output/regional-access.json` | *(served from the committed snapshot for now)* | Epic 4 / US4 | annual (AIHW release ~May) |
+| `npm run build:aihw` → `output/regional-access.json` | `python ../backend/build_aihw_db.py` → `regional_access` table | Epic 4 / US4 | annual (AIHW release ~May) |
 
-Both Epic 2 endpoints are now pure database reads: `GET /api/v1/services` queries
-the `services` table, and `GET /api/v1/geocode` resolves a typed suburb or
-postcode against the `postcodes` table (no more `postcodeapi.com.au` call and no
-runtime fetch of the Australian Postcodes file).
+Every data endpoint is now a pure database read: `GET /api/v1/services` queries
+the `services` table, `GET /api/v1/geocode` the `postcodes` table, and
+`GET /api/v1/regional-access` the `regional_access` table. Nothing fetches or
+parses a source at request time — the old `postcodeapi.com.au` call, the runtime
+fetch of the Australian Postcodes file, and the AIHW auto-refresh job are all
+gone.
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -182,12 +184,19 @@ patient-rate gap is smaller but a cleaner "did people get in the door" measure.
 
 ### Run
 
+Needs the PostgreSQL database reachable via `DATABASE_URL` (see
+`../backend/.env.example`).
+
 ```
 npm install
 npm run build:aihw
+python ../backend/build_aihw_db.py
 ```
 
-### Backend hand-off
-
-`output/regional-access.json` is consumed by the backend, served at `GET /api/regional-access`.
-The backend owner wires the schedule (annual) and the endpoint; this script is the ETL step.
+Writes `output/regional-access.json` (a local build artifact — git-ignored, not
+the served copy), then upserts both rate measures into the `regional_access`
+table (one row per financial year + metric). `GET /api/v1/regional-access` reads
+the latest financial year from that table at request time and shapes it back into
+`{ financialYear, source, sourceUrl, metrics: { serviceRatePer1000: {…}, patientRatePer1000: {…} } }`.
+There is no runtime AIHW fetch — a new release is picked up by dropping the new
+ZIP in `input/` and re-running the two commands above.
