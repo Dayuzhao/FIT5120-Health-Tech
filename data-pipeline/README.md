@@ -1,23 +1,26 @@
 # Curbi data pipeline
 
-Offline scripts that turn open datasets into files served by the backend (`output/`,
-imported into SQLite or read directly by the FastAPI app in `../backend`). Nothing
-here is bundled into the frontend build and nothing here is deployed — run manually
-on a developer machine, then re-run the relevant backend import step.
+Offline scripts that clean open datasets into `output/*.json`, which the loader
+scripts in `../backend` then upsert into the hosted PostgreSQL database. The
+FastAPI app reads that database in real time. Nothing here is bundled into the
+frontend build and nothing here is deployed — run manually on a developer
+machine, then re-run the matching backend loader.
 
-| Script | Story | Output | Refresh |
+The unit's rule is that the app may not ship pre-processed data hard-coded into
+it; cleaning datasets offline **is** allowed as long as the served copy lives in
+the hosted relational database, which must also be writable at any time (the
+loaders upsert, so re-running them adds/updates rows without a wipe).
+
+| Clean (here) | Load (backend) | Story | Refresh |
 |---|---|---|---|
-| `npm run build:nhsd` | Epic 2 / US2 | `output/nhsd-services.json` → import with `python ../backend/build_nhsd_db.py` | when a new NHSD snapshot ships |
-| `npm run build:aihw` | Epic 4 / US4 | `output/regional-access.json` (served by backend) | annual (AIHW release ~May) |
+| `npm run build:nhsd` → `output/nhsd-services.json` | `python ../backend/build_nhsd_db.py` → `services` table | Epic 2 / US2 | when a new NHSD snapshot ships |
+| `npm run build:postcodes` → `output/vic-postcodes.json` | `python ../backend/build_postcodes_db.py` → `postcodes` table | Epic 2 / US2 | rarely (postcodes barely move) |
+| `npm run build:aihw` → `output/regional-access.json` | *(served from the committed snapshot for now)* | Epic 4 / US4 | annual (AIHW release ~May) |
 
-**Postcode/suburb lookup (Epic 2 / US2) is no longer built here.** It used to be a
-static `vic-postcodes.json` bundled into the frontend; it's now served live by the
-backend's `GET /api/v1/geocode` (numeric postcode → `postcodeapi.com.au`, suburb name
-→ an in-memory cache refreshed daily from the live Australian Postcodes feed — see
-`refresh_vic_postcode_cache()` in `../backend/main.py`). This closes the "data can't
-be hard-coded, must come from an API or database" requirement for both Epic 2 data
-sources: NHSD services now live in SQLite behind `/api/v1/services`, and postcode
-lookups are resolved live rather than from a file shipped in the app bundle.
+Both Epic 2 endpoints are now pure database reads: `GET /api/v1/services` queries
+the `services` table, and `GET /api/v1/geocode` resolves a typed suburb or
+postcode against the `postcodes` table (no more `postcodeapi.com.au` call and no
+runtime fetch of the Australian Postcodes file).
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -76,18 +79,57 @@ where `hours` is an object with only the populated days (`mon`..`sun`), omitted 
 
 ### Run
 
+Needs the PostgreSQL database reachable via `DATABASE_URL` (see
+`../backend/.env.example`).
+
 ```
 npm install
 npm run build:nhsd
 python ../backend/build_nhsd_db.py
 ```
 
-Writes `output/nhsd-services.json`, then imports it into `../backend/data/nhsd.sqlite3`,
-which `GET /api/v1/services` (suburb/postcode exact match, or `near=lat:lon,...` for
-distance-sorted nearby results) queries at request time.
+Writes `output/nhsd-services.json` (a local build artifact — git-ignored, not the
+served copy), then upserts it into the `services` table, which `GET /api/v1/services`
+(suburb/postcode exact match, or `near=lat:lon,...` for distance-sorted nearby
+results) queries at request time.
 
-Current VIC output: **1,308 services, ~442 KB** (small; queried via SQLite, not shipped
-to the browser).
+Current VIC output: **1,308 services** — small enough that the `near` query loads
+the table and sorts by haversine in Python, no PostGIS.
+
+---
+
+## Postcodes — suburb/postcode → coordinate (Epic 2 / US2)
+
+`GET /api/v1/geocode` turns a typed suburb or postcode into the coordinate the
+Help Finder measures distance from. This used to be an in-memory cache the backend
+refreshed from the live Australian Postcodes file; it is now the `postcodes`
+table.
+
+**Source:** Australian Postcodes, Matthew Proctor —
+<https://www.matthewproctor.com/australian_postcodes>
+Direct file: <https://www.matthewproctor.com/Content/postcodes/australian_postcodes.json>
+**Licence:** CC BY 4.0 — attribute in the Data Management Plan.
+
+### Raw file
+
+- `input/australian_postcodes.json` (git-ignored; download it into `input/` yourself
+  from the direct-file link above).
+- Fields used: `locality`, `postcode`, `state`, `type`, `lat`, `long`.
+
+### Filter logic (`src/build-postcodes.js`)
+
+Keep rows where `state == "VIC"` and `type == "Delivery Area"` (excludes PO boxes),
+with finite non-zero coordinates. Suburb upper-cased; de-duplicated on
+`postcode|suburb` (the source repeats a locality across statistical-area variants).
+Output record: `{ postcode, suburb, lat, lon }`.
+
+### Run
+
+```
+npm install
+npm run build:postcodes
+python ../backend/build_postcodes_db.py
+```
 
 ---
 
