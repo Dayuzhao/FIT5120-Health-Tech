@@ -1,0 +1,4 @@
+# Word documents under docs/ are working drafts kept outside git.
+# The tracked plan lives at docs/data-management-plan.md.
+docs/*.docx
+docs/~$*
