@@ -14,7 +14,6 @@ FIT5120 Industry Experience project — Team Health-Tech.
 | `Curbi/` | The web app the user sees | Vue 3 + Vite, plain JS, `vue-router`, Dexie (on-device IndexedDB) |
 | `backend/` | Read-only JSON API over the open datasets | FastAPI, `psycopg` connection pool |
 | `data-pipeline/` | Offline scripts that clean the open datasets and load them into the database | Node (ETL) + Python (loaders) |
-| `docs/` | Data Management Plan and supporting docs | Markdown |
 
 ## How the pieces fit together
 
@@ -51,7 +50,8 @@ Two rules shape this design:
 | AIHW – Medicare mental health services, annual PHN data tables | Regional-vs-metro access snapshot (Epic 4) | AIHW open (CC BY) |
 
 Details, wrangling steps and caveats: `data-pipeline/README.md`. Governance,
-storage design and ethics: `docs/data-management-plan.md`.
+storage design and ethics are covered in the Data Management Plan, kept with the
+team's submission documents outside this repo.
 
 ## Quick start (local)
 
