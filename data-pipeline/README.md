@@ -33,13 +33,27 @@ login to download. Snapshot: point-in-time extract **as at June 2025** — a sta
 not a live API. Listings are frozen at June 2025 until a refreshed bundle ships; surface an
 "information as of June 2025" note in the UI.
 
-**Licence:** NOT a plain open licence. AURIN gates it behind two click-through agreements you
-must sign in when logged in: an **"Academic Confirmation"** and a specific **"NHSD"** data
-agreement (PDF on the dataset page). **Action for the team:** read the NHSD agreement PDF and
-confirm whether bundling a filtered subset into a publicly-deployed app is permitted, or
-whether redistribution is restricted to academic use — this decides whether
-`nhsd-services.json` can ship in the public build. Record the outcome in the Data Management
-Plan (Ethical / Legal / Privacy section).
+**Licence:** No open licence. The data.gov.au record lists the licence as "Not Specified"; the
+only access path is the AURIN Data Provider Platform, which gates the download behind the
+**AURIN NHSD Platform Terms of Use v1.0 (6 June 2023)** (University of Melbourne) and, by
+reference, the healthdirect NHSD Terms of Use
+(<https://about.healthdirect.gov.au/nhsd-terms-of-use>).
+
+Key terms (AURIN NHSD Platform Terms of Use):
+
+- Scholarly/research and/or government/not-for-profit use only — **publication is explicitly
+  included** (cl. 1). **No commercial use** (cl. 2).
+- Non-transferable licence, for use **within Australia only** (cl. 5).
+- NHSD Content is owned by **Healthdirect Australia Ltd**; attribute it and claim no IP in it
+  (cl. 4).
+- Personal information / identifiers must not be disclosed to an **overseas recipient**
+  (cl. 9(d)).
+- Content must not be used in a false, inaccurate or misleading way (cl. 7(a)) — hence the
+  "information as of June 2025" note above.
+
+Curbi (non-commercial student project, Australian focus, database hosted in AWS RDS Sydney) is
+within cl. 1 / 2 / 5, so a public deployment is permitted. Record the licence basis and
+compliance in the Data Management Plan (Ethical / Legal / Privacy section).
 
 ### Raw file
 
@@ -66,7 +80,10 @@ Plan (Ethical / Legal / Privacy section).
    read `OPEN` — the field reflects whether the service was inside its opening hours at
    snapshot time, not whether it still operates. The script does **not** filter on it.
 4. ~143 of the kept records have "Confidential Address" or no street address (sole
-   practitioners); they still carry suburb + coordinates.
+   practitioners); they still carry suburb + coordinates. More broadly, records named after
+   an individual practitioner are **personal information** — see the licence note above
+   (cl. 9(d)): they must not be served to overseas recipients, so they need filtering or
+   access control before the public API relies on them.
 
 ### Filter logic (`src/build-nhsd.js`)
 
