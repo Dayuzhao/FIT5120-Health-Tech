@@ -1,0 +1,481 @@
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+
+import { fetchRegionalAccess } from '@/services/regionalAccess'
+
+const loading = ref(true)
+const failed = ref(false)
+const snapshot = ref(null)
+
+// AC1 asks specifically for the Medicare mental health service rate per 1,000
+// population, so the view reads that metric and ignores the others the API returns.
+const serviceRate = computed(() => snapshot.value?.metrics?.serviceRatePer1000 ?? null)
+
+// Draw the regional bar as a proportion of the metro bar for the visual comparison.
+const regionalBarWidth = computed(() => {
+  if (!serviceRate.value) {
+    return '0%'
+  }
+
+  return `${Math.round((serviceRate.value.regional / serviceRate.value.metro) * 100)}%`
+})
+
+onMounted(async () => {
+  try {
+    snapshot.value = await fetchRegionalAccess()
+  } catch (error) {
+    console.error('Unable to load the regional access snapshot:', error)
+    failed.value = true
+  } finally {
+    loading.value = false
+  }
+})
+</script>
+
+<template>
+  <main class="access-page">
+    <section class="access-hero">
+      <p class="eyebrow">REGIONAL ACCESS SNAPSHOT</p>
+
+      <h1>Support isn’t spread evenly</h1>
+
+      <p class="intro">
+        Access to Medicare-subsidised mental health services differs across
+        Victoria. This snapshot compares metropolitan Melbourne with regional
+        Victoria.
+      </p>
+    </section>
+
+    <section class="comparison-section">
+      <div class="comparison-heading">
+        <div>
+          <p class="section-label">MENTAL HEALTH SERVICE ACCESS</p>
+
+          <h2>
+            Medicare-subsidised mental health services per 1,000 people
+          </h2>
+        </div>
+
+        <span v-if="serviceRate" class="year-badge">
+          {{ snapshot.financialYear }}
+        </span>
+      </div>
+
+      <div v-if="loading" class="data-loading">
+        <div class="loading-spinner"></div>
+
+        <div class="loading-copy">
+          <h3>Loading comparison data</h3>
+          <p>
+            Please wait while Curbi prepares the regional access snapshot.
+          </p>
+        </div>
+      </div>
+
+      <div v-else-if="failed || !serviceRate" class="data-error">
+        <div class="error-icon">!</div>
+
+        <div class="error-copy">
+          <h3>Comparison data is temporarily unavailable</h3>
+          <p>
+            We couldn't load the regional access comparison right now.
+            You can still continue to Curbi.
+          </p>
+        </div>
+      </div>
+
+      <template v-else>
+        <div class="comparison-grid">
+          <article class="stat-card">
+            <p class="area-label">Metro Melbourne</p>
+
+            <div class="stat-value">{{ serviceRate.metro }}</div>
+
+            <p class="stat-unit">
+              services per 1,000 people
+            </p>
+
+            <div class="stat-bar">
+              <div class="stat-fill" :style="{ width: '100%' }"></div>
+            </div>
+          </article>
+
+          <article class="stat-card">
+            <p class="area-label">Regional Victoria</p>
+
+            <div class="stat-value">{{ serviceRate.regional }}</div>
+
+            <p class="stat-unit">
+              services per 1,000 people
+            </p>
+
+            <div class="stat-bar">
+              <div class="stat-fill" :style="{ width: regionalBarWidth }"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="comparison-note">
+          <div class="note-icon">i</div>
+          <p>
+            This comparison gives a simple overview of differences in service
+            access across Victoria. It is shown during onboarding and does not use
+            your location.
+          </p>
+        </div>
+
+        <div class="source-row">
+          <div>
+            <span class="source-label">DATA SOURCE</span>
+            <p>{{ snapshot.source }}</p>
+          </div>
+
+          <div>
+            <span class="source-label">FINANCIAL YEAR</span>
+
+            <p>{{ snapshot.financialYear }}</p>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <section class="continue-section">
+      <div>
+        <h2>Curbi can help you take the next step</h2>
+
+        <p>
+          Explore tools designed to help you pause health checking behaviours
+          and find support when you need it.
+        </p>
+      </div>
+
+      <RouterLink to="/home" class="continue-button">
+        Get started
+      </RouterLink>
+    </section>
+  </main>
+</template>
+
+<style scoped>
+.data-loading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #e1e8e3;
+  border-radius: 14px;
+  background: #fafbf9;
+}
+
+.loading-spinner {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 3px solid #dde7df;
+  border-top-color: #5d856a;
+  border-radius: 50%;
+  animation: spin 900ms linear infinite;
+}
+
+.loading-copy h3 {
+  margin: 0 0 6px;
+  color: #294433;
+  font-size: 15px;
+}
+
+.loading-copy p {
+  margin: 0;
+  color: #68736c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.data-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #e1e8e3;
+  border-radius: 14px;
+  background: #fafbf9;
+}
+
+.error-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e8eee9;
+  color: #5f7766;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.error-copy h3 {
+  margin: 0 0 6px;
+  color: #294433;
+  font-size: 15px;
+}
+
+.error-copy p {
+  margin: 0;
+  color: #68736c;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.access-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 72px 32px 52px;
+}
+
+.access-hero {
+  max-width: 760px;
+}
+
+.eyebrow,
+.section-label,
+.source-label {
+  color: #5d856a;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+}
+
+.eyebrow {
+  margin: 0 0 14px;
+}
+
+h1 {
+  margin: 0;
+  color: #20392a;
+  font-size: clamp(40px, 5vw, 60px);
+  line-height: 1.08;
+}
+
+.intro {
+  max-width: 680px;
+  margin: 22px 0 0;
+  color: #68736c;
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.comparison-section {
+  margin-top: 48px;
+  padding: 34px;
+  border: 1px solid #e2e9e4;
+  border-radius: 24px;
+  background: white;
+}
+
+.comparison-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.section-label {
+  margin: 0 0 9px;
+}
+
+.comparison-heading h2 {
+  max-width: 650px;
+  margin: 0;
+  color: #294433;
+  font-size: 24px;
+  line-height: 1.35;
+}
+
+.year-badge {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-radius: 20px;
+  background: #eef4ef;
+  color: #4f765a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.stat-card {
+  padding: 28px;
+  border: 1px solid #e1e8e3;
+  border-radius: 18px;
+  background: #fbfcfb;
+}
+
+.area-label {
+  margin: 0;
+  color: #4f5e54;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stat-value {
+  margin-top: 16px;
+  color: #20392a;
+  font-size: clamp(48px, 6vw, 68px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stat-unit {
+  margin: 10px 0 22px;
+  color: #7b867e;
+  font-size: 13px;
+}
+
+.stat-bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e7ece8;
+}
+
+.stat-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: #6f9778;
+}
+
+.comparison-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #f3f7f4;
+}
+
+.note-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #dfeadf;
+  color: #4f765a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.comparison-note p {
+  margin: 2px 0 0;
+  color: #637068;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.source-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid #e7ece8;
+}
+
+.source-row p {
+  margin: 7px 0 0;
+  color: #4f5e54;
+  font-size: 14px;
+}
+
+.continue-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  margin-top: 34px;
+  padding: 30px 34px;
+  border-radius: 20px;
+  background: #eef4ef;
+}
+
+.continue-section h2 {
+  margin: 0;
+  color: #294433;
+  font-size: 22px;
+}
+
+.continue-section p {
+  max-width: 640px;
+  margin: 9px 0 0;
+  color: #657168;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.continue-button {
+  flex-shrink: 0;
+  padding: 14px 24px;
+  border-radius: 10px;
+  background: #4f815f;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    transform 180ms ease,
+    background 180ms ease;
+}
+
+.continue-button:hover {
+  background: #416f50;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 760px) {
+  .access-page {
+    padding: 46px 20px 34px;
+  }
+
+  .comparison-section {
+    padding: 24px 20px;
+  }
+
+  .comparison-heading {
+    flex-direction: column;
+  }
+
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .source-row {
+    grid-template-columns: 1fr;
+  }
+
+  .continue-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .continue-button {
+    width: 100%;
+    text-align: center;
+  }
+}
+</style>
