@@ -18,8 +18,13 @@
 
 <style scoped>
 .navbar {
-  width: 100%;
-  background: white;
+  position: sticky;
+  top: 0px;
+  z-index: 120;
+
+  width: 120%;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid #e7ece8;
 }
 

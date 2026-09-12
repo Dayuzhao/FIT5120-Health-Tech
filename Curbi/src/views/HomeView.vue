@@ -1,8 +1,58 @@
+<script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+
+const activeScene = ref('hero')
+
+const heroSection = ref(null)
+const journeySection = ref(null)
+const supportSection = ref(null)
+const closingSection = ref(null)
+
+let sceneObserver = null
+
+onMounted(() => {
+  const sections = [
+    heroSection.value,
+    journeySection.value,
+    supportSection.value,
+    closingSection.value,
+  ].filter(Boolean)
+
+  sceneObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          activeScene.value = entry.target.dataset.scene
+        }
+      })
+    },
+    {
+      threshold: 0.45,
+    },
+  )
+
+  sections.forEach((section) => {
+    sceneObserver.observe(section)
+  })
+})
+
+onBeforeUnmount(() => {
+  if (sceneObserver) {
+    sceneObserver.disconnect()
+  }
+})
+</script>
+
 <template>
   <main class="home-page">
+    <div class="scene-shell" :class="`scene-${activeScene}`" aria-hidden="true">
+      <div class="scene-layer scene-layer-one"></div>
+      <div class="scene-layer scene-layer-two"></div>
+      <div class="scene-layer scene-layer-three"></div>
+    </div>
 
     <!-- Scene 1: First impression -->
-    <section class="home-hero">
+    <section ref="heroSection" data-scene="hero" class="home-hero section-panel" :class="{ 'section-active': activeScene === 'hero' }">
       <div class="hero-background hero-background-one"></div>
 
       <div class="hero-content">
@@ -47,7 +97,7 @@
     </section>
 
     <!-- Scene 2: Explain the journey -->
-    <section id="journey" class="journey-section">
+    <section id="journey" ref="journeySection" data-scene="journey" class="journey-section section-panel" :class="{ 'section-active': activeScene === 'journey' }">
       <div class="journey-copy">
         <p class="eyebrow">CREATE SOME SPACE</p>
 
@@ -81,7 +131,7 @@
     </section>
 
     <!-- Scene 3: Main actions -->
-    <section id="explore" class="support-section">
+    <section id="explore" ref="supportSection" data-scene="support" class="support-section section-panel" :class="{ 'section-active': activeScene === 'support' }">
       <div class="section-heading">
         <p class="eyebrow">YOUR NEXT STEP</p>
 
@@ -139,7 +189,7 @@
     </section>
 
     <!-- Scene 4: Final action -->
-    <section class="closing-section">
+    <section ref="closingSection" data-scene="closing" class="closing-section section-panel" :class="{ 'section-active': activeScene === 'closing' }">
       <div class="closing-content">
         <p class="eyebrow">WHEN YOU ARE READY</p>
 
@@ -174,25 +224,224 @@
 
 <style scoped>
 .home-page {
-  overflow: hidden;
+  position: relative;
+  overflow-x: clip;
   background: #f7faf7;
   color: #20392a;
 }
 
-/* ---------------- HERO ---------------- */
+.scene-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #f7faf7;
+  transition: background 650ms ease;
+}
 
+.scene-layer {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+
+  transition:
+    transform 750ms ease,
+    opacity 750ms ease,
+    background 750ms ease,
+    filter 750ms ease;
+}
+
+/* right */
+.scene-layer-one {
+  width: 680px;
+  height: 680px;
+  top: 80px;
+  right: -190px;
+  opacity: 0.82;
+  filter: blur(4px);
+}
+
+/* lower left */
+.scene-layer-two {
+  width: 560px;
+  height: 560px;
+  left: -160px;
+  bottom: -220px;
+  opacity: 0.68;
+  filter: blur(5px);
+}
+
+/* Small soft light in the centre */
+.scene-layer-three {
+  width: 430px;
+  height: 430px;
+  top: 42%;
+  left: 52%;
+  opacity: 0.44;
+  filter: blur(18px);
+  transform: translate(-50%, -50%);
+}
+
+/*SCENE 1 — HERO*/
+.scene-shell.scene-hero {
+  background:
+    radial-gradient(
+      circle at 82% 22%,
+      rgba(231, 241, 201, 0.95) 0,
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #f9fbf6 0%,
+      #edf5ee 55%,
+      #e4eee6 100%
+    );
+}
+
+.scene-shell.scene-hero .scene-layer-one {
+  background: rgba(123, 166, 132, 0.18);
+  transform: translate3d(0, 0, 0);
+}
+
+.scene-shell.scene-hero .scene-layer-two {
+  background: rgba(211, 227, 188, 0.28);
+  transform: translate3d(0, 0, 0);
+}
+
+.scene-shell.scene-hero .scene-layer-three {
+  background: rgba(255, 255, 255, 0.72);
+}
+
+
+/* SCENE 2 — JOURNEY */
+.scene-shell.scene-journey {
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      rgba(237, 244, 213, 0.95) 0,
+      transparent 31%
+    ),
+    linear-gradient(
+      160deg,
+      #eef5ef 0%,
+      #e3eee5 100%
+    );
+}
+
+.scene-shell.scene-journey .scene-layer-one {
+  background: rgba(124, 166, 135, 0.22);
+  transform: translate3d(-55px, 35px, 0) scale(1.05);
+}
+
+.scene-shell.scene-journey .scene-layer-two {
+  background: rgba(218, 231, 191, 0.34);
+  transform: translate3d(45px, -30px, 0);
+}
+
+.scene-shell.scene-journey .scene-layer-three {
+  background: rgba(255, 255, 255, 0.64);
+  transform: translate(-48%, -46%) scale(1.12);
+}
+
+
+/* SCENE 3 — SUPPORT */
+.scene-shell.scene-support {
+  background:
+    radial-gradient(
+      circle at 84% 18%,
+      rgba(242, 235, 207, 0.9) 0,
+      transparent 27%
+    ),
+    linear-gradient(
+      135deg,
+      #fafbf7 0%,
+      #f2f6ee 58%,
+      #edf3ea 100%
+    );
+}
+
+.scene-shell.scene-support .scene-layer-one {
+  background: rgba(146, 181, 152, 0.2);
+  transform: translate3d(-25px, 55px, 0) scale(0.95);
+}
+
+.scene-shell.scene-support .scene-layer-two {
+  background: rgba(232, 224, 190, 0.38);
+  transform: translate3d(55px, -20px, 0);
+}
+
+.scene-shell.scene-support .scene-layer-three {
+  background: rgba(255, 255, 255, 0.78);
+  transform: translate(-50%, -50%) scale(1.18);
+}
+
+
+/* SCENE 4 — CLOSING */
+.scene-shell.scene-closing {
+  background:
+    radial-gradient(
+      circle at 22% 48%,
+      rgba(235, 241, 205, 0.92) 0,
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      #e5efe7 0%,
+      #f7faf4 100%
+    );
+}
+
+.scene-shell.scene-closing .scene-layer-one {
+  background: rgba(118, 164, 130, 0.2);
+  transform: translate3d(20px, -25px, 0) scale(1.08);
+}
+
+.scene-shell.scene-closing .scene-layer-two {
+  background: rgba(228, 233, 197, 0.34);
+  transform: translate3d(-35px, 20px, 0);
+}
+
+.scene-shell.scene-closing .scene-layer-three {
+  background: rgba(255, 255, 255, 0.82);
+  transform: translate(-50%, -48%) scale(1.25);
+}
+
+
+/* CONTENT LAYERS */
+.section-panel,
+.privacy-note {
+  position: relative;
+  z-index: 1;
+}
+
+#journey,
+#explore {
+  scroll-margin-top: 90px;
+}
+
+
+/*HERO*/
 .home-hero {
   position: relative;
+
   min-height: calc(100vh - 82px);
+
   display: grid;
   grid-template-columns: 1fr 0.75fr;
+
   align-items: center;
+
   gap: 70px;
-  padding: 80px max(32px, calc((100vw - 1180px) / 2));
+
+  padding:
+    80px
+    max(32px, calc((100vw - 1180px) / 2));
+
   overflow: hidden;
-  background:
-    radial-gradient(circle at 80% 25%, #e9f0cc 0, transparent 28%),
-    linear-gradient(135deg, #f8fbf6 0%, #edf5ee 55%, #e3eee6 100%);
+
+  /*Transparent so the global scene background can show through.*/
+  background: transparent;
 }
 
 .hero-background {
@@ -204,45 +453,60 @@
 .hero-background-one {
   width: 620px;
   height: 620px;
+
   right: -180px;
   bottom: -270px;
-  background: rgba(119, 157, 126, 0.12);
-  filter: blur(2px);
+
+  background: rgba(119, 157, 126, 0.1);
+
+  filter: blur(3px);
 }
 
 .hero-content {
   position: relative;
   z-index: 2;
+
   max-width: 690px;
 }
 
 .eyebrow {
   margin: 0 0 18px;
+
   color: #62836c;
+
   font-size: 12px;
   font-weight: 700;
+
   letter-spacing: 2.4px;
 }
 
 .home-hero h1 {
   max-width: 720px;
+
   margin: 0;
+
   color: #1e3929;
+
   font-size: clamp(52px, 6vw, 82px);
   font-weight: 600;
+
   line-height: 1.02;
   letter-spacing: -2px;
 }
 
 .home-hero h1 span {
   display: block;
+
   color: #537661;
 }
 
 .hero-intro {
   max-width: 590px;
+
   margin: 30px 0;
+
   color: #65736a;
+
   font-size: 18px;
   line-height: 1.75;
 }
@@ -252,20 +516,30 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+
   gap: 16px;
 }
 
+
+/* BUTTONS */
 .primary-button {
+  min-height: 48px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+
   padding: 14px 24px;
+
   border-radius: 999px;
+
   background: #47765a;
   color: white;
+
   font-weight: 600;
+
   text-decoration: none;
+
   transition:
     transform 180ms ease,
     background 180ms ease,
@@ -274,14 +548,20 @@
 
 .primary-button:hover {
   background: #386548;
+
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(54, 94, 68, 0.18);
+
+  box-shadow:
+    0 12px 28px
+    rgba(54, 94, 68, 0.18);
 }
 
 .secondary-button,
 .text-link {
   color: #47765a;
+
   font-weight: 600;
+
   text-decoration: none;
 }
 
@@ -290,55 +570,101 @@
   text-decoration: underline;
 }
 
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.text-link:focus-visible,
+.scroll-hint:focus-visible,
+.support-card:focus-visible {
+  outline: 3px solid #789982;
+  outline-offset: 4px;
+}
+
 .hero-note {
   margin-top: 20px;
+
   color: #7b877f;
+
   font-size: 13px;
 }
 
+
+/* HERO LOGO */
 .hero-brand {
   position: relative;
   z-index: 2;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
 }
 
 .hero-brand img {
   width: min(100%, 480px);
+
   height: auto;
-  opacity: 0.92;
+
+  opacity: 0.94;
 }
 
+
+/* SCROLL HINT */
 .scroll-hint {
   position: absolute;
+
   left: 50%;
   bottom: 28px;
+
   z-index: 3;
+
   display: flex;
   flex-direction: column;
+
   align-items: center;
+
   gap: 6px;
+
   color: #718078;
+
   font-size: 12px;
+
   text-decoration: none;
+
   transform: translateX(-50%);
 }
 
 .scroll-arrow {
   font-size: 20px;
+
+  animation: scrollArrow 1.8s ease-in-out infinite;
 }
 
-/* ---------------- JOURNEY ---------------- */
+@keyframes scrollArrow {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
 
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+
+/* JOURNEY */
 .journey-section {
   min-height: 100vh;
-  padding: 120px max(32px, calc((100vw - 1180px) / 2));
-  background: #eef4ef;
+
+  padding:
+    120px
+    max(32px, calc((100vw - 1180px) / 2));
+
+  background: rgba(238, 244, 239, 0.55);
 }
 
 .journey-copy {
   max-width: 720px;
+
   margin-bottom: 70px;
 }
 
@@ -346,9 +672,12 @@
 .section-heading h2,
 .closing-content h2 {
   margin: 0;
+
   color: #20392a;
+
   font-size: clamp(36px, 4vw, 56px);
   font-weight: 600;
+
   line-height: 1.12;
 }
 
@@ -356,85 +685,134 @@
 .section-heading > p:last-child,
 .closing-content > p {
   max-width: 620px;
+
   margin-top: 22px;
+
   color: #6b776f;
+
   font-size: 17px;
   line-height: 1.7;
 }
 
 .journey-steps {
   display: grid;
+
   grid-template-columns: repeat(3, 1fr);
+
   gap: 24px;
 }
 
 .journey-step {
   min-height: 260px;
+
   padding: 32px;
-  border: 1px solid rgba(66, 98, 76, 0.12);
+
+  border:
+    1px solid
+    rgba(66, 98, 76, 0.12);
+
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.72);
+
+  background:
+    rgba(255, 255, 255, 0.72);
+
+  backdrop-filter: blur(10px);
 }
 
 .step-number {
   display: block;
+
   margin-bottom: 60px;
+
   color: #7b9a83;
+
   font-size: 13px;
   font-weight: 700;
+
   letter-spacing: 1px;
 }
 
 .journey-step h3 {
   margin: 0 0 12px;
+
+  color: #294433;
+
   font-size: 21px;
 }
 
 .journey-step p {
   margin: 0;
+
   color: #707c74;
+
   line-height: 1.6;
 }
 
-/* ---------------- SUPPORT ---------------- */
 
+/* SUPPORT SECTION */
 .support-section {
-  padding: 120px max(32px, calc((100vw - 1180px) / 2));
-  background: #fafbf8;
+  min-height: 100vh;
+
+  padding:
+    120px
+    max(32px, calc((100vw - 1180px) / 2));
+
+  background:
+    rgba(250, 251, 248, 0.72);
 }
 
 .section-heading {
   max-width: 700px;
+
   margin-bottom: 55px;
 }
 
 .support-grid {
   display: grid;
+
   grid-template-columns: repeat(3, 1fr);
+
   gap: 22px;
 }
 
 .support-card {
   min-height: 390px;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
   padding: 32px;
+
   border: 1px solid #e0e8e2;
   border-radius: 28px;
-  background: white;
+
+  background:
+    rgba(255, 255, 255, 0.88);
+
+  backdrop-filter: blur(9px);
+
   color: inherit;
+
   text-decoration: none;
+
   transition:
     transform 220ms ease,
     box-shadow 220ms ease,
-    border-color 220ms ease;
+    border-color 220ms ease,
+    background 220ms ease;
 }
 
 .support-card:hover {
   border-color: #b8cdbd;
+
+  background: rgba(255, 255, 255, 0.97);
+
   transform: translateY(-8px);
-  box-shadow: 0 22px 45px rgba(52, 77, 59, 0.1);
+
+  box-shadow:
+    0 22px 45px
+    rgba(52, 77, 59, 0.1);
 }
 
 .support-card-coming {
@@ -442,7 +820,13 @@
 }
 
 .support-card-coming:hover {
+  border-color: #e0e8e2;
+
+  background:
+    rgba(255, 255, 255, 0.88);
+
   transform: none;
+
   box-shadow: none;
 }
 
@@ -452,40 +836,51 @@
 
 .card-label {
   margin: 0 0 10px;
+
   color: #779081;
+
   font-size: 11px;
   font-weight: 700;
+
   letter-spacing: 1.7px;
 }
 
 .support-card h3 {
   margin: 0 0 12px;
+
   color: #274332;
+
   font-size: 25px;
 }
 
 .support-card p {
   color: #727d76;
+
   line-height: 1.6;
 }
 
 .card-link {
   color: #47765a;
+
   font-size: 14px;
   font-weight: 600;
 }
 
-/* ---------------- CLOSING ---------------- */
 
+/* CLOSING */
 .closing-section {
   min-height: 76vh;
+
   display: flex;
+
   align-items: center;
   justify-content: center;
+
   padding: 100px 32px;
+
   background:
-    radial-gradient(circle at 20% 50%, #eef4d4 0, transparent 28%),
-    linear-gradient(135deg, #e5efe7 0%, #f7faf4 100%);
+    rgba(235, 244, 233, 0.52);
+
   text-align: center;
 }
 
@@ -500,35 +895,104 @@
 
 .closing-actions {
   justify-content: center;
+
   margin-top: 30px;
 }
 
-/* ---------------- PRIVACY ---------------- */
 
+/* PRIVACY */
 .privacy-note {
   padding: 30px 32px 40px;
+
   background: #f7faf7;
+
   color: #587062;
+
   text-align: center;
 }
 
 .privacy-note p {
   max-width: 680px;
+
   margin: 7px auto 0;
+
   color: #768179;
+
   font-size: 13px;
   line-height: 1.6;
 }
 
-/* ---------------- RESPONSIVE ---------------- */
 
+/* SCROLL REVEAL */
+.hero-content,
+.hero-brand,
+.journey-copy,
+.journey-step,
+.section-heading,
+.support-card,
+.closing-content {
+  opacity: 0;
+
+  transform: translateY(24px);
+
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
+}
+
+.section-active .hero-content,
+.section-active .hero-brand,
+.section-active .journey-copy,
+.section-active .journey-step,
+.section-active .section-heading,
+.section-active .support-card,
+.section-active .closing-content {
+  opacity: 1;
+
+  transform: translateY(0);
+}
+
+
+/* Stagger the repeated items */
+.section-active .journey-step:nth-child(1),
+.section-active .support-card:nth-child(1) {
+  transition-delay: 70ms;
+}
+
+.section-active .journey-step:nth-child(2),
+.section-active .support-card:nth-child(2) {
+  transition-delay: 150ms;
+}
+
+.section-active .journey-step:nth-child(3),
+.section-active .support-card:nth-child(3) {
+  transition-delay: 230ms;
+}
+
+
+/* RESPONSIVE — TABLET */
 @media (max-width: 900px) {
+  .scene-layer-one {
+    width: 500px;
+    height: 500px;
+
+    right: -230px;
+  }
+
+  .scene-layer-two {
+    width: 430px;
+    height: 430px;
+  }
+
   .home-hero {
     min-height: auto;
+
     grid-template-columns: 1fr;
-    gap: 50px;
+
+    gap: 48px;
+
     padding-top: 70px;
-    padding-bottom: 100px;
+    padding-bottom: 105px;
   }
 
   .hero-brand {
@@ -554,6 +1018,8 @@
   }
 }
 
+
+/* RESPONSIVE — MOBILE */
 @media (max-width: 600px) {
   .home-hero,
   .journey-section,
@@ -564,15 +1030,30 @@
 
   .home-hero h1 {
     font-size: clamp(44px, 13vw, 58px);
+
+    letter-spacing: -1.2px;
   }
 
-  .hero-actions {
+  .hero-intro {
+    font-size: 16px;
+  }
+
+  .hero-actions,
+  .closing-actions {
     align-items: stretch;
     flex-direction: column;
   }
 
   .primary-button {
     width: 100%;
+    box-sizing: border-box;
+  }
+
+  .secondary-button,
+  .text-link {
+    padding: 10px 0;
+
+    text-align: center;
   }
 
   .hero-brand img {
@@ -581,18 +1062,50 @@
 
   .journey-section,
   .support-section {
-    padding-top: 80px;
-    padding-bottom: 80px;
+    min-height: auto;
+
+    padding-top: 82px;
+    padding-bottom: 82px;
+  }
+
+  .journey-step,
+  .support-card {
+    padding: 26px;
+
+    border-radius: 22px;
+  }
+
+  .closing-section {
+    min-height: 70vh;
+
+    padding:
+      80px
+      22px;
+  }
+
+  .scroll-hint {
+    bottom: 18px;
   }
 }
 
+
+/* REDUCED MOTION */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition: none !important;
-    animation: none !important;
+  .scene-shell,
+  .scene-layer,
+  .hero-content,
+  .hero-brand,
+  .journey-copy,
+  .journey-step,
+  .section-heading,
+  .support-card,
+  .closing-content,
+  .primary-button {
+    transition: none;
+  }
+
+  .scroll-arrow {
+    animation: none;
   }
 }
 </style>
