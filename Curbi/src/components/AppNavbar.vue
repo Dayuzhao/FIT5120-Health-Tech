@@ -1,16 +1,14 @@
 <template>
   <header class="navbar">
     <div class="nav-container">
-      <RouterLink to="/home" class="logo">
-        Curbi
+      <RouterLink to="/" class="logo" aria-label="Curbi home">
+        <img src="/images/curbi-logo.png" alt="Curbi" />
       </RouterLink>
 
       <nav class="nav-links">
-        <RouterLink to="/home">Home</RouterLink>
+        <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/urge">Urge Support</RouterLink>
-        <RouterLink to="/help" class="nav-link">Find Support</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/contact">Contact</RouterLink>
+        <RouterLink to="/help">Find Support</RouterLink>
       </nav>
 
       <div class="brand-icon">🌿</div>
@@ -36,10 +34,15 @@
 }
 
 .logo {
-  font-size: 28px;
-  font-weight: 700;
-  color: #245b3b;
+  display: flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.logo img {
+  width: 130px;
+  height: auto;
+  display: block;
 }
 
 .nav-links {
