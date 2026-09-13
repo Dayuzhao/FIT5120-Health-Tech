@@ -7,7 +7,6 @@ import CompleteView from '../views/CompleteView.vue'
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import HelpFinderView from '../views/HelpFinderView.vue'
-import RegionalAccessView from '../views/RegionalAccessView.vue'
 import AtmosphereView from '../views/AtmosphereView.vue'
 
 const router = createRouter({
@@ -15,13 +14,12 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'regional-access',
-      component: RegionalAccessView,
+      name: 'home',
+      component: HomeView,
     },
     {
       path: '/home',
-      name: 'home',
-      component: HomeView,
+      redirect: '/',
     },
     {
       path: '/urge',
