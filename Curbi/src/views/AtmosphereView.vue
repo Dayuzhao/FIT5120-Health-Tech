@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useMusicPlayer } from '@/composables/useMusicPlayer'
 
@@ -7,7 +8,19 @@ import { useMusicPlayer } from '@/composables/useMusicPlayer'
 // (HomeView.vue, support-points grid) links here since us3-home-guidance-ui
 // merged into iteration-2 and was pulled into this branch (2026-09-13).
 
+const router = useRouter()
 const { tracks, activeCategory, loading, failed, loadTracks, playCategory } = useMusicPlayer()
+
+function goBack() {
+  // router.back() falls back to the browser's real history entry, so it
+  // returns to wherever the user actually came from (the homepage card in
+  // the common case) rather than hard-coding "/" and losing that page's state.
+  if (window.history.state?.back) {
+    router.back()
+  } else {
+    router.push('/')
+  }
+}
 
 // Order matters here: it's the display order of the mood cards.
 const CATEGORY_META = [
@@ -44,6 +57,11 @@ onMounted(() => {
 
 <template>
   <main class="atmosphere-page">
+    <button type="button" class="back-link" @click="goBack">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 19l-7-7 7-7" /></svg>
+      Back
+    </button>
+
     <section class="atmosphere-hero">
       <p class="eyebrow">CALM BACKGROUND</p>
 
@@ -99,6 +117,41 @@ onMounted(() => {
 
 .atmosphere-hero {
   max-width: 680px;
+}
+
+.back-link {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  z-index: 40;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 20px 11px 14px;
+  border: none;
+  border-radius: 999px;
+  background: #4f815f;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(32, 57, 42, 0.28);
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.back-link:hover {
+  background: #416f50;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 700px) {
+  .back-link {
+    right: 14px;
+    bottom: 78px;
+    padding: 9px 16px 9px 12px;
+    font-size: 13px;
+  }
 }
 
 .eyebrow {
