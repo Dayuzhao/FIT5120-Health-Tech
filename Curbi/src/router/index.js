@@ -8,6 +8,7 @@ import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import HelpFinderView from '../views/HelpFinderView.vue'
 import RegionalAccessView from '../views/RegionalAccessView.vue'
+import AtmosphereView from '../views/AtmosphereView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -51,6 +52,11 @@ const router = createRouter({
       path: '/help',
       name: 'help',
       component: HelpFinderView,
+    },
+    {
+      path: '/atmosphere',
+      name: 'atmosphere',
+      component: AtmosphereView,
     },
   ],
 })
