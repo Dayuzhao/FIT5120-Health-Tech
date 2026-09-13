@@ -1,4 +1,4 @@
-# Curbi data pipeline
+﻿# Curbi data pipeline
 
 Offline scripts that clean open datasets into `output/*.json`, which the loader
 scripts in `../backend` then upsert into the hosted PostgreSQL database. The
@@ -15,16 +15,14 @@ loaders upsert, so re-running them adds/updates rows without a wipe).
 |---|---|---|---|
 | `npm run build:nhsd` → `output/nhsd-services.json` | `python ../backend/build_nhsd_db.py` → `services` table | Epic 2 / US2 | when a new NHSD snapshot ships |
 | `npm run build:postcodes` → `output/vic-postcodes.json` | `python ../backend/build_postcodes_db.py` → `postcodes` table | Epic 2 / US2 | rarely (postcodes barely move) |
-| `npm run build:aihw` → `output/regional-access.json` | `python ../backend/build_aihw_db.py` → `regional_access` table | Epic 4 / US4 | annual (AIHW release ~May) |
 | `npm run build:gbif` → `output/species.json` | `python ../backend/build_species_db.py` → `species` + `species_images` tables | Epic 8 / US8 | rarely (fixed species list, human-picked images; re-run to refresh names/status) |
 | `npm run build:jamendo` → `output/tracks.json` | `python ../backend/build_tracks_db.py` → `tracks` table | Epic 6 / US6 | occasionally (re-run to pick up newer popular tracks) |
 
 Every data endpoint is now a pure database read: `GET /api/v1/services` queries
-the `services` table, `GET /api/v1/geocode` the `postcodes` table, and
-`GET /api/v1/regional-access` the `regional_access` table. Nothing fetches or
-parses a source at request time — the old `postcodeapi.com.au` call, the runtime
-fetch of the Australian Postcodes file, and the AIHW auto-refresh job are all
-gone. `GET /api/v1/tracks` (Epic 6) reads its table the same way. `GET /api/v1/species`
+the `services` table and `GET /api/v1/geocode` the `postcodes` table. Nothing
+fetches or parses a source at request time — the old `postcodeapi.com.au` call
+and the runtime fetch of the Australian Postcodes file are both gone.
+`GET /api/v1/tracks` (Epic 6) reads its table the same way. `GET /api/v1/species`
 (Epic 8) will too, once the backend owner adds that endpoint.
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
@@ -155,72 +153,6 @@ python ../backend/build_postcodes_db.py
 
 ---
 
-## AIHW — regional access snapshot (Epic 4 / US4)
-
-**Source:** AIHW *Medicare mental health services* annual data tables.
-Page: <https://www.aihw.gov.au/mental-health/resources/data-tables> → "Data tables: Medicare
-mental health services `<FY>`" (a ZIP). 2024–25 release published May 2026.
-**Licence:** open (AIHW; CC BY — confirm exact statement from the page and record in the DMP).
-
-Chosen after ruling out a quarterly source: no Australian dataset offers mental-health-specific
-+ metro-vs-regional geography + quarterly refresh together. The AIHW quarterly *Activity
-Monitoring* report is state-level only and has no downloadable file; a hand-built MBS item list
-via Services Australia is a landmine (items 2712/2713 were renumbered late 2025, silently
-producing a bogus −20% "trend"). This annual PHN table is AIHW-curated (item mapping handled)
-and stable year to year.
-
-### Raw file
-
-- `input/Medicare-mental-health-service-<FY>.zip` (git-ignored; download it yourself).
-  The download URL carries a per-release `getmedia` GUID, so it is **not** hard-coded — grab
-  the current link from the Data tables page, or a human updates it each year.
-- The script reads the `Medicare mental health services PHN SA4 <FY>.csv` entry from inside
-  the ZIP. That CSV is **Windows-1252 encoded** and uses non-breaking spaces inside values
-  (`All providers`); `build-aihw.js` handles both.
-- Columns: `FinancialYear, GeographicAreaType (PHN|SA4), GeographicAreaCode, phnname,
-  ProviderType, Measure, Value`. Years 2015–16 to 2024–25.
-
-### Logic (`src/build-aihw.js`)
-
-Filter to `GeographicAreaType == PHN`, `ProviderType == "All providers"`, latest
-`FinancialYear`. Average the 3 Greater-Melbourne PHNs (North Western Melbourne, Eastern
-Melbourne, South Eastern Melbourne) and the 3 regional-Victoria PHNs (Gippsland, Murray,
-Western Victoria), for both rate measures. If a configured PHN name is missing in a release,
-the script errors (rather than averaging the wrong set).
-
-Output `output/regional-access.json`:
-
-```json
-{ "financialYear": "2024–25", "source": "...", "metroPhns": [...], "regionalPhns": [...],
-  "metrics": {
-    "serviceRatePer1000": { "metro": 569, "regional": 458, "gapPct": -19.6 },
-    "patientRatePer1000": { "metro": 111, "regional": 107, "gapPct": -3.9 } } }
-```
-
-Both measures are output; the team picks which the onboarding screen shows. **Service rate**
-= services delivered per 1,000 people (access + need mixed); **patient rate** = share of
-people who saw someone. The service-rate gap is the larger, more striking figure; the
-patient-rate gap is smaller but a cleaner "did people get in the door" measure.
-
-### Run
-
-Needs the PostgreSQL database reachable via `DATABASE_URL` (see
-`../backend/.env.example`).
-
-```
-npm install
-npm run build:aihw
-python ../backend/build_aihw_db.py
-```
-
-Writes `output/regional-access.json` (a local build artifact — git-ignored, not
-the served copy), then upserts both rate measures into the `regional_access`
-table (one row per financial year + metric). `GET /api/v1/regional-access` reads
-the latest financial year from that table at request time and shapes it back into
-`{ financialYear, source, sourceUrl, metrics: { serviceRatePer1000: {…}, patientRatePer1000: {…} } }`.
-There is no runtime AIHW fetch — a new release is picked up by dropping the new
-ZIP in `input/` and re-running the two commands above.
-
 ## GBIF — species dex (Epic 8 / US8)
 
 **Source:** GBIF (Global Biodiversity Information Facility) occurrence records, queried live —
@@ -240,9 +172,9 @@ numbat), Peramelemorphia (bandicoots, bilby). Deliberately excludes bats, rodent
 mammals, and introduced species (foxes, rabbits, camels, etc.) as not "distinctively
 Australian."
 
-The list is hard-coded as reviewable config at the top of `build-gbif.js` (same pattern as
-`METRO_PHNS`/`REGIONAL_PHNS` in `build-aihw.js`), not derived from a live query — GBIF
-occurrence counts drift day to day, so a live "≥20 occurrences" filter would silently change
+The list is hard-coded as reviewable config at the top of `build-gbif.js`, not derived
+from a live query — GBIF occurrence counts drift day to day, so a live "≥20 occurrences"
+filter would silently change
 the dex contents on every rebuild. The list was drawn from a wider 68-species candidate set,
 narrowed by two live checks in September 2026:
 
