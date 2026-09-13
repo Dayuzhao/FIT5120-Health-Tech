@@ -24,12 +24,12 @@ UPSERT = """
 INSERT INTO tracks (
     jamendo_id, name, artist_name, album_name, album_image_url, audio_url,
     duration_seconds, license_url, license_cc_nc, license_cc_nd, license_cc_sa,
-    genres, share_url
+    genres, matched_tag, share_url
 )
 VALUES (
     %(jamendo_id)s, %(name)s, %(artist_name)s, %(album_name)s, %(album_image_url)s, %(audio_url)s,
     %(duration_seconds)s, %(license_url)s, %(license_cc_nc)s, %(license_cc_nd)s, %(license_cc_sa)s,
-    %(genres)s, %(share_url)s
+    %(genres)s, %(matched_tag)s, %(share_url)s
 )
 ON CONFLICT (jamendo_id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -43,6 +43,7 @@ ON CONFLICT (jamendo_id) DO UPDATE SET
     license_cc_nd = EXCLUDED.license_cc_nd,
     license_cc_sa = EXCLUDED.license_cc_sa,
     genres = EXCLUDED.genres,
+    matched_tag = EXCLUDED.matched_tag,
     share_url = EXCLUDED.share_url
 """
 
@@ -64,6 +65,7 @@ def main() -> None:
             "license_cc_nd": t["licenseNoDerivatives"],
             "license_cc_sa": t["licenseShareAlike"],
             "genres": t["genres"],
+            "matched_tag": t["matchedTag"],
             "share_url": t["shareUrl"],
         }
         for t in data["tracks"]
