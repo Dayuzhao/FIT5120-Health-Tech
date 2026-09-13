@@ -1,5 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import CurbiCompanion from '../components/CurbiCompanion.vue'
 
 const activeScene = ref('hero')
 
@@ -89,11 +90,8 @@ onBeforeUnmount(() => {
         </p>
       </div>
 
-      <div class="hero-brand">
-        <img
-          src="/images/curbi-logo.png"
-          alt="Curbi"
-        />
+      <div class="hero-companion">
+        <CurbiCompanion />
       </div>
 
       <a href="#journey" class="scroll-hint">
@@ -229,6 +227,25 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.hero-companion {
+  position: fixed;
+  right: 28px;
+  bottom: 22px;
+  z-index: 30;
+
+  width: clamp(140px, 12vw, 190px);
+
+  pointer-events: auto;
+}
+
+@media (max-width: 700px) {
+  .hero-companion {
+    right: 12px;
+    bottom: 12px;
+    width: 110px;
+  }
+}
+
 .home-page {
   position: relative;
   overflow-x: clip;
@@ -237,7 +254,6 @@ onBeforeUnmount(() => {
 }
 
 /* Background scenes */
-
 .scene-shell {
   position: fixed;
   inset: 0;
@@ -290,7 +306,6 @@ onBeforeUnmount(() => {
 }
 
 /* Keep text readable */
-
 .scene-overlay {
   position: absolute;
   inset: 0;
@@ -307,7 +322,6 @@ onBeforeUnmount(() => {
 }
 
 /* Soft foreground atmosphere */
-
 .scene-layer {
   position: absolute;
   z-index: 3;
@@ -340,7 +354,6 @@ onBeforeUnmount(() => {
 }
 
 /* Small movement between scenes */
-
 .scene-journey .scene-layer-one {
   transform: translate(-30px, 25px);
 }
@@ -385,7 +398,7 @@ onBeforeUnmount(() => {
   min-height: calc(100vh - 82px);
 
   display: grid;
-  grid-template-columns: 1fr 0.75fr;
+  grid-template-columns: 1fr;
 
   align-items: center;
 
@@ -543,27 +556,6 @@ onBeforeUnmount(() => {
 
   font-size: 13px;
 }
-
-
-/* HERO LOGO */
-.hero-brand {
-  position: relative;
-  z-index: 2;
-
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-}
-
-.hero-brand img {
-  width: min(100%, 480px);
-
-  height: auto;
-
-  opacity: 0.94;
-}
-
 
 /* SCROLL HINT */
 .scroll-hint {
@@ -880,7 +872,7 @@ onBeforeUnmount(() => {
 
 /* SCROLL REVEAL */
 .hero-content,
-.hero-brand,
+.hero-companion,
 .journey-copy,
 .journey-step,
 .section-heading,
@@ -896,7 +888,7 @@ onBeforeUnmount(() => {
 }
 
 .section-active .hero-content,
-.section-active .hero-brand,
+.section-active .hero-companion,
 .section-active .journey-copy,
 .section-active .journey-step,
 .section-active .section-heading,
@@ -948,14 +940,6 @@ onBeforeUnmount(() => {
 
     padding-top: 70px;
     padding-bottom: 105px;
-  }
-
-  .hero-brand {
-    order: 2;
-  }
-
-  .hero-brand img {
-    max-width: 360px;
   }
 
   .journey-steps,
@@ -1011,10 +995,6 @@ onBeforeUnmount(() => {
     text-align: center;
   }
 
-  .hero-brand img {
-    max-width: 280px;
-  }
-
   .journey-section,
   .support-section {
     min-height: auto;
@@ -1049,7 +1029,7 @@ onBeforeUnmount(() => {
   .scene-shell,
   .scene-layer,
   .hero-content,
-  .hero-brand,
+  .hero-companion,
   .journey-copy,
   .journey-step,
   .section-heading,
