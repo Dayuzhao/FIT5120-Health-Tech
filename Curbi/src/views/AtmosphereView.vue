@@ -3,16 +3,9 @@ import { computed, onMounted } from 'vue'
 
 import { useMusicPlayer } from '@/composables/useMusicPlayer'
 
-// Entry point note: the homepage on the (unmerged) us3-home-guidance-ui
-// branch already has a placeholder card for this — "CALM BACKGROUND / Set
-// the atmosphere / Music coming in Iteration 2" in HomeView.vue's
-// support-points grid. Once that branch merges, wire it up by replacing
-//   <article class="support-card-coming"> ... <span class="card-link">Music coming in Iteration 2</span></article>
-// with
-//   <RouterLink to="/atmosphere" class="support-card"> ... <span class="card-link">Start listening →</span></RouterLink>
-// Not done yet on purpose — this branch never touches HomeView.vue/AppNavbar.vue,
-// see the Epic 6 plan notes for why. Until then this page is only reachable
-// by URL.
+// Entry point: the homepage's "CALM BACKGROUND / Set the atmosphere" card
+// (HomeView.vue, support-points grid) links here since us3-home-guidance-ui
+// merged into iteration-2 and was pulled into this branch (2026-09-13).
 
 const { tracks, activeCategory, loading, failed, loadTracks, playCategory } = useMusicPlayer()
 
