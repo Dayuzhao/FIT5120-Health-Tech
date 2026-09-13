@@ -110,8 +110,10 @@ CREATE TABLE IF NOT EXISTS tracks (
     license_cc_nd    BOOLEAN NOT NULL,
     license_cc_sa    BOOLEAN NOT NULL,
     genres           TEXT[] NOT NULL DEFAULT '{}',
+    matched_tag      TEXT NOT NULL,
     share_url        TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_tracks_matched_tag ON tracks (matched_tag);
 """
 
 # Small pool: the endpoints are sync `def`, RDS db.t4g.micro allows ~80

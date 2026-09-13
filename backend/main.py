@@ -96,6 +96,40 @@ def get_regional_access() -> dict[str, Any]:
     }
 
 
+@app.get("/api/v1/tracks")
+def get_tracks() -> dict[str, Any]:
+    """Epic 6 / US6 background-music playlist."""
+    with connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
+            rows = cursor.execute(
+                "SELECT jamendo_id, name, artist_name, album_name, album_image_url, "
+                "audio_url, duration_seconds, license_url, license_cc_nc, license_cc_nd, "
+                "license_cc_sa, genres, matched_tag, share_url FROM tracks ORDER BY name"
+            ).fetchall()
+
+    return {
+        "tracks": [
+            {
+                "jamendoId": row["jamendo_id"],
+                "name": row["name"],
+                "artistName": row["artist_name"],
+                "albumName": row["album_name"],
+                "albumImageUrl": row["album_image_url"],
+                "audioUrl": row["audio_url"],
+                "durationSeconds": row["duration_seconds"],
+                "licenseUrl": row["license_url"],
+                "licenseNonCommercial": row["license_cc_nc"],
+                "licenseNoDerivatives": row["license_cc_nd"],
+                "licenseShareAlike": row["license_cc_sa"],
+                "genres": row["genres"],
+                "matchedTag": row["matched_tag"],
+                "shareUrl": row["share_url"],
+            }
+            for row in rows
+        ]
+    }
+
+
 @app.get("/api/v1/geocode")
 def geocode(q: str) -> dict[str, Any]:
     """Resolve a typed suburb name or postcode to coordinates via the `postcodes`

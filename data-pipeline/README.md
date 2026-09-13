@@ -24,8 +24,8 @@ the `services` table, `GET /api/v1/geocode` the `postcodes` table, and
 `GET /api/v1/regional-access` the `regional_access` table. Nothing fetches or
 parses a source at request time — the old `postcodeapi.com.au` call, the runtime
 fetch of the Australian Postcodes file, and the AIHW auto-refresh job are all
-gone. `GET /api/v1/species` (Epic 8) and `GET /api/v1/tracks` (Epic 6) read
-their tables the same way once the backend owner adds the endpoints.
+gone. `GET /api/v1/tracks` (Epic 6) reads its table the same way. `GET /api/v1/species`
+(Epic 8) will too, once the backend owner adds that endpoint.
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -389,18 +389,36 @@ needed for these read-only GET calls).
 
 An unfiltered query returns genres unsuitable for a calm-down tool (metal, hardcore — found
 live testing this API), so the script queries 3 fixed calming tags — `chillout`, `lounge`,
-`ambient` — at `limit=30` each, ordered by `popularity_total`, and dedupes by track ID (a track
-can carry more than one of the 3 tags). Waits 1s between the 3 requests: Jamendo rate-limits
-bursts from one client, returning a `"status": "success"` response with 0 results rather than an
-error — confirmed live by retrying the identical request after a short pause, so the script
-treats an unexpected 0-result response as a hard failure (likely rate-limited) rather than "no
-tracks matched."
+`solopiano` — at `limit=30` each, ordered by `popularity_total`, and dedupes by track ID (a
+track can carry more than one of the 3 tags). Waits 1s between the 3 requests: Jamendo
+rate-limits bursts from one client, returning a `"status": "success"` response with 0 results
+rather than an error — confirmed live by retrying the identical request after a short pause, so
+the script treats an unexpected 0-result response as a hard failure (likely rate-limited) rather
+than "no tracks matched."
 
-Output `output/tracks.json`, ~60-65 tracks after dedup:
+**`ambient` was tried first and dropped (2026-09-13)** — the tag name doesn't reliably predict
+the track's actual energy on Jamendo; a user testing the shuffled playlist flagged one track as
+jarringly upbeat, and checking its tags showed it was literally titled "(Trance remix by ...)".
+A full audit of the `ambient`-tagged pool at the time found a trance remix, a dance/pop track,
+and two drum-n-bass tracks all carrying the `ambient` tag — the tag describes a passage in the
+track, not its overall character. `solopiano` was checked live as a replacement (50-track sample:
+dominated by `classical`/`newage`/`filmscore`/`neoclassical`, no dance/trance/drumnbass hits) and
+swapped in. A handful of `chillout`/`lounge` tracks still carried a `hiphop`/`breakbeat`/
+`drumnbass` tag alongside their calming one (mostly lo-fi hip-hop, milder than the `ambient`
+outliers but the same root problem) — rather than judge those case by case, **`EXCLUDED_GENRES`**
+drops any track carrying `dance`/`trance`/`breakbeat`/`drumnbass`/`idm`/`hiphop` in its `genres`
+array, regardless of which calming tag matched it. This runs per-track during collection, not as
+a separate pass — see the "excluded" count in each tag's console line.
+
+Because a category can be swapped out (or genre filtering tightened) like this, `build_tracks_db.py`
+(see Run, below) does a full sync — delete-then-upsert — not an append-only upsert, or a dropped
+track's row would linger in the table forever.
+
+Output `output/tracks.json`, ~70 tracks after dedup and filtering:
 
 ```json
-{ "generatedAt": "...", "source": "Jamendo API ...", "calmingTags": ["chillout","lounge","ambient"],
-  "trackCount": 65,
+{ "generatedAt": "...", "source": "Jamendo API ...", "calmingTags": ["chillout","lounge","solopiano"],
+  "trackCount": 71,
   "tracks": [
     { "jamendoId": "946", "name": "Emptiness", "artistName": "Alexander Blu",
       "albumImageUrl": "...", "audioUrl": "...", "durationSeconds": 241,
@@ -426,6 +444,6 @@ npm run build:jamendo
 python ../backend/build_tracks_db.py
 ```
 
-Writes `output/tracks.json` (git-ignored build artifact), then upserts into the `tracks` table.
-Re-run either command any time — both upsert on `jamendo_id`, so a re-run refreshes
-popularity-ranked picks without duplicating rows.
+Writes `output/tracks.json` (git-ignored build artifact), then syncs the `tracks` table to match
+it exactly (upsert + delete stale rows, see the `ambient` → `solopiano` note above for why the
+delete step matters). Re-run either command any time.
