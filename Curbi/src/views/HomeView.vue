@@ -46,9 +46,15 @@ onBeforeUnmount(() => {
 <template>
   <main class="home-page">
     <div class="scene-shell" :class="`scene-${activeScene}`" aria-hidden="true">
+      <div class="scene-image scene-image-hero"></div>
+      <div class="scene-image scene-image-journey"></div>
+      <div class="scene-image scene-image-support"></div>
+      <div class="scene-image scene-image-closing"></div>
+
+      <div class="scene-overlay"></div>
+
       <div class="scene-layer scene-layer-one"></div>
       <div class="scene-layer scene-layer-two"></div>
-      <div class="scene-layer scene-layer-three"></div>
     </div>
 
     <!-- Scene 1: First impression -->
@@ -230,183 +236,134 @@ onBeforeUnmount(() => {
   color: #20392a;
 }
 
+/* Background scenes */
+
 .scene-shell {
   position: fixed;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: #f7faf7;
-  transition: background 650ms ease;
+  background: #edf4ee;
 }
+
+.scene-image {
+  position: absolute;
+  inset: 0;
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
+  opacity: 0;
+  transform: scale(1.03);
+
+  transition:
+    opacity 900ms ease,
+    transform 1400ms ease;
+}
+
+.scene-image-hero {
+  background-image: url('/images/home/hero-scene.png');
+}
+
+.scene-image-journey {
+  background-image: url('/images/home/scene-pause.png');
+}
+
+.scene-image-support {
+  background-image: url('/images/home/scene-choice.png');
+}
+
+.scene-image-closing {
+  background-image: url('/images/home/scene-closing.png');
+}
+
+/* Show current scene */
+
+.scene-hero .scene-image-hero,
+.scene-journey .scene-image-journey,
+.scene-support .scene-image-support,
+.scene-closing .scene-image-closing {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Keep text readable */
+
+.scene-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(247, 250, 247, 0.9) 0%,
+      rgba(247, 250, 247, 0.64) 34%,
+      rgba(247, 250, 247, 0.18) 62%,
+      rgba(247, 250, 247, 0.04) 100%
+    );
+}
+
+/* Soft foreground atmosphere */
 
 .scene-layer {
   position: absolute;
+  z-index: 3;
   border-radius: 50%;
   pointer-events: none;
 
   transition:
-    transform 750ms ease,
-    opacity 750ms ease,
-    background 750ms ease,
-    filter 750ms ease;
+    transform 900ms ease,
+    opacity 900ms ease;
 }
 
-/* right */
 .scene-layer-one {
-  width: 680px;
-  height: 680px;
+  width: 600px;
+  height: 600px;
+  right: -260px;
   top: 80px;
-  right: -190px;
-  opacity: 0.82;
-  filter: blur(4px);
+
+  background: rgba(124, 166, 135, 0.12);
+  filter: blur(20px);
 }
 
-/* lower left */
 .scene-layer-two {
-  width: 560px;
-  height: 560px;
-  left: -160px;
+  width: 520px;
+  height: 520px;
+  left: -250px;
   bottom: -220px;
-  opacity: 0.68;
-  filter: blur(5px);
+
+  background: rgba(221, 232, 195, 0.16);
+  filter: blur(24px);
 }
 
-/* Small soft light in the centre */
-.scene-layer-three {
-  width: 430px;
-  height: 430px;
-  top: 42%;
-  left: 52%;
-  opacity: 0.44;
-  filter: blur(18px);
-  transform: translate(-50%, -50%);
+/* Small movement between scenes */
+
+.scene-journey .scene-layer-one {
+  transform: translate(-30px, 25px);
 }
 
-/*SCENE 1 — HERO*/
-.scene-shell.scene-hero {
-  background:
-    radial-gradient(
-      circle at 82% 22%,
-      rgba(231, 241, 201, 0.95) 0,
-      transparent 30%
-    ),
-    linear-gradient(
-      135deg,
-      #f9fbf6 0%,
-      #edf5ee 55%,
-      #e4eee6 100%
-    );
+.scene-support .scene-layer-one {
+  transform: translate(-55px, 45px);
 }
 
-.scene-shell.scene-hero .scene-layer-one {
-  background: rgba(123, 166, 132, 0.18);
-  transform: translate3d(0, 0, 0);
+.scene-closing .scene-layer-one {
+  transform: translate(-20px, -20px);
 }
 
-.scene-shell.scene-hero .scene-layer-two {
-  background: rgba(211, 227, 188, 0.28);
-  transform: translate3d(0, 0, 0);
+.scene-journey .scene-layer-two {
+  transform: translate(35px, -20px);
 }
 
-.scene-shell.scene-hero .scene-layer-three {
-  background: rgba(255, 255, 255, 0.72);
+.scene-support .scene-layer-two {
+  transform: translate(55px, -35px);
 }
 
-
-/* SCENE 2 — JOURNEY */
-.scene-shell.scene-journey {
-  background:
-    radial-gradient(
-      circle at 18% 22%,
-      rgba(237, 244, 213, 0.95) 0,
-      transparent 31%
-    ),
-    linear-gradient(
-      160deg,
-      #eef5ef 0%,
-      #e3eee5 100%
-    );
+.scene-closing .scene-layer-two {
+  transform: translate(20px, -10px);
 }
-
-.scene-shell.scene-journey .scene-layer-one {
-  background: rgba(124, 166, 135, 0.22);
-  transform: translate3d(-55px, 35px, 0) scale(1.05);
-}
-
-.scene-shell.scene-journey .scene-layer-two {
-  background: rgba(218, 231, 191, 0.34);
-  transform: translate3d(45px, -30px, 0);
-}
-
-.scene-shell.scene-journey .scene-layer-three {
-  background: rgba(255, 255, 255, 0.64);
-  transform: translate(-48%, -46%) scale(1.12);
-}
-
-
-/* SCENE 3 — SUPPORT */
-.scene-shell.scene-support {
-  background:
-    radial-gradient(
-      circle at 84% 18%,
-      rgba(242, 235, 207, 0.9) 0,
-      transparent 27%
-    ),
-    linear-gradient(
-      135deg,
-      #fafbf7 0%,
-      #f2f6ee 58%,
-      #edf3ea 100%
-    );
-}
-
-.scene-shell.scene-support .scene-layer-one {
-  background: rgba(146, 181, 152, 0.2);
-  transform: translate3d(-25px, 55px, 0) scale(0.95);
-}
-
-.scene-shell.scene-support .scene-layer-two {
-  background: rgba(232, 224, 190, 0.38);
-  transform: translate3d(55px, -20px, 0);
-}
-
-.scene-shell.scene-support .scene-layer-three {
-  background: rgba(255, 255, 255, 0.78);
-  transform: translate(-50%, -50%) scale(1.18);
-}
-
-
-/* SCENE 4 — CLOSING */
-.scene-shell.scene-closing {
-  background:
-    radial-gradient(
-      circle at 22% 48%,
-      rgba(235, 241, 205, 0.92) 0,
-      transparent 30%
-    ),
-    linear-gradient(
-      135deg,
-      #e5efe7 0%,
-      #f7faf4 100%
-    );
-}
-
-.scene-shell.scene-closing .scene-layer-one {
-  background: rgba(118, 164, 130, 0.2);
-  transform: translate3d(20px, -25px, 0) scale(1.08);
-}
-
-.scene-shell.scene-closing .scene-layer-two {
-  background: rgba(228, 233, 197, 0.34);
-  transform: translate3d(-35px, 20px, 0);
-}
-
-.scene-shell.scene-closing .scene-layer-three {
-  background: rgba(255, 255, 255, 0.82);
-  transform: translate(-50%, -48%) scale(1.25);
-}
-
 
 /* CONTENT LAYERS */
 .section-panel,
@@ -659,7 +616,7 @@ onBeforeUnmount(() => {
     120px
     max(32px, calc((100vw - 1180px) / 2));
 
-  background: rgba(238, 244, 239, 0.55);
+  background: rgba(238, 244, 239, 0.38);
 }
 
 .journey-copy {
@@ -757,8 +714,7 @@ onBeforeUnmount(() => {
     120px
     max(32px, calc((100vw - 1180px) / 2));
 
-  background:
-    rgba(250, 251, 248, 0.72);
+  background: rgba(250, 251, 248, 0.4);
 }
 
 .section-heading {
@@ -878,8 +834,7 @@ onBeforeUnmount(() => {
 
   padding: 100px 32px;
 
-  background:
-    rgba(235, 244, 233, 0.52);
+  background: rgba(235, 244, 233, 0.34);
 
   text-align: center;
 }
