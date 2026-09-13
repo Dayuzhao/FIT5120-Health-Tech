@@ -1,4 +1,4 @@
-"""FastAPI backend for Curbi: Epic 2 Help Finder + Epic 4 onboarding snapshot.
+"""FastAPI backend for Curbi.
 
 Every data-driven response is read from the hosted PostgreSQL database in real
 time (see db.py) — nothing is served from a file committed to the repo.
@@ -63,37 +63,6 @@ def on_startup() -> None:
 @app.on_event("shutdown")
 def on_shutdown() -> None:
     pool.close()
-
-
-@app.get("/api/v1/regional-access")
-def get_regional_access() -> dict[str, Any]:
-    """Epic 4 / US4 onboarding snapshot: a fixed regional-Victoria-vs-metro-Melbourne
-    comparison of Medicare mental health service access for the latest financial
-    year. The same for every user; no location is asked for or used."""
-    with connection() as conn:
-        with conn.cursor(row_factory=dict_row) as cursor:
-            rows = cursor.execute(
-                "SELECT financial_year, metric, metro, regional, gap_pct, source, source_url "
-                "FROM regional_access "
-                "WHERE financial_year = (SELECT MAX(financial_year) FROM regional_access)"
-            ).fetchall()
-
-    if not rows:
-        raise HTTPException(status_code=503, detail="No regional access snapshot is available")
-
-    return {
-        "financialYear": rows[0]["financial_year"],
-        "source": rows[0]["source"],
-        "sourceUrl": rows[0]["source_url"],
-        "metrics": {
-            row["metric"]: {
-                "metro": row["metro"],
-                "regional": row["regional"],
-                "gapPct": row["gap_pct"],
-            }
-            for row in rows
-        },
-    }
 
 
 @app.get("/api/v1/tracks")
