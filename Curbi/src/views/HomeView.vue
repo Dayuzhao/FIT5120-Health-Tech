@@ -162,19 +162,23 @@ onBeforeUnmount(() => {
           <span class="card-link">Start urge support →</span>
         </RouterLink>
 
-        <article class="support-card support-card-coming">
+        <RouterLink to="/play" class="support-card">
           <span class="card-icon">🍃</span>
 
           <div>
             <p class="card-label">QUICK BREAK</p>
+
             <h3>Take a playful pause</h3>
+
             <p>
               Shift your attention with a short, low-pressure interaction.
             </p>
           </div>
 
-          <span class="card-link">Leaf Tap coming in Iteration 2</span>
-        </article>
+          <span class="card-link">
+            Start Leaf Tap →
+          </span>
+        </RouterLink>
 
         <article class="support-card support-card-coming">
           <span class="card-icon">♫</span>
