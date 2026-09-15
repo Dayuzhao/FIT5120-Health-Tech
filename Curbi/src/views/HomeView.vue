@@ -180,7 +180,7 @@ onBeforeUnmount(() => {
           </span>
         </RouterLink>
 
-        <article class="support-card support-card-coming">
+        <RouterLink to="/atmosphere" class="support-card">
           <span class="card-icon">♫</span>
 
           <div>
@@ -191,8 +191,8 @@ onBeforeUnmount(() => {
             </p>
           </div>
 
-          <span class="card-link">Music coming in Iteration 2</span>
-        </article>
+          <span class="card-link">Start listening →</span>
+        </RouterLink>
       </div>
     </section>
 

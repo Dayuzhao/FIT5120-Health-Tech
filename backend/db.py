@@ -52,20 +52,6 @@ CREATE TABLE IF NOT EXISTS postcodes (
 );
 CREATE INDEX IF NOT EXISTS idx_postcodes_suburb ON postcodes (suburb);
 
--- Epic 4 / US4 onboarding snapshot: one row per (financial year, measure), so a
--- new AIHW release just adds rows. AC1 uses serviceRatePer1000; patientRatePer1000
--- is loaded too since build-aihw.js already computes it.
-CREATE TABLE IF NOT EXISTS regional_access (
-    financial_year  TEXT NOT NULL,
-    metric          TEXT NOT NULL,
-    metro           DOUBLE PRECISION NOT NULL,
-    regional        DOUBLE PRECISION NOT NULL,
-    gap_pct         DOUBLE PRECISION,
-    source          TEXT NOT NULL,
-    source_url      TEXT,
-    PRIMARY KEY (financial_year, metric)
-);
-
 -- Epic 8 / US8 species dex. "taxon_order" not "order" (SQL reserved word).
 -- observation_count is a rarity signal from real GBIF data for the app to
 -- surface later; it is never used to drive unlock rules (those stay tied to
@@ -110,8 +96,10 @@ CREATE TABLE IF NOT EXISTS tracks (
     license_cc_nd    BOOLEAN NOT NULL,
     license_cc_sa    BOOLEAN NOT NULL,
     genres           TEXT[] NOT NULL DEFAULT '{}',
+    matched_tag      TEXT NOT NULL,
     share_url        TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_tracks_matched_tag ON tracks (matched_tag);
 """
 
 # Small pool: the endpoints are sync `def`, RDS db.t4g.micro allows ~80

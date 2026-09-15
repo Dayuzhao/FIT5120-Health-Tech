@@ -18,7 +18,9 @@
 //    a live Postgres query (satisfies the hosted-DB-at-runtime constraint).
 //  - An unfiltered/default query returns unsuitable genres for a calm-down
 //    tool (metal, hardcore) — found live when testing this API. Restricting
-//    to calming tags (chillout, lounge, ambient) is not optional.
+//    to calming tags (chillout, lounge, solopiano) is not optional, and even
+//    within those tags a per-track genre exclude-list is still needed — see
+//    EXCLUDED_GENRES below.
 //  - Jamendo rate-limits bursty requests from one client (a `results_count`
 //    of 0 with a `success` status, not an error, was observed live) — this
 //    script waits between the 3 tag requests rather than firing them back to
@@ -32,7 +34,20 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 // --- config (confirm with the team) -----------------------------------------
 const CLIENT_ID = process.env.JAMENDO_CLIENT_ID
-const CALMING_TAGS = ['chillout', 'lounge', 'ambient']
+// 'ambient' was dropped 2026-09-13: the tag is applied loosely on Jamendo —
+// live spot-checks turned up a trance remix, a dance-pop track, and two
+// drum-n-bass tracks all tagged "ambient" (the tag describes a passage in the
+// track, not necessarily its overall energy). 'solopiano' checked clean by
+// the same spot-check (classical/newage/filmscore, no dance/trance/dnb).
+const CALMING_TAGS = ['chillout', 'lounge', 'solopiano']
+// A track can match one of the calming tags above and still carry a genre
+// tag from a much higher-energy style — Jamendo's tags describe anything
+// present in the track, not its overall character (same root cause as the
+// 'ambient' removal above). Excluded regardless of which calming tag it was
+// found under. Added 2026-09-13 after a user flagged a jarringly upbeat
+// track in shuffle; a handful of chillout/lounge tracks carried `hiphop` or
+// `breakbeat` alongside their calming tag.
+const EXCLUDED_GENRES = new Set(['dance', 'trance', 'breakbeat', 'drumnbass', 'idm', 'hiphop'])
 const TRACKS_PER_TAG = 30 // fetched pre-dedupe, aiming for ~60 unique tracks
 const REQUEST_DELAY_MS = 1000
 // --------------------------------------------------------------------------
@@ -101,13 +116,19 @@ async function main() {
     process.stdout.write(`Fetching tag "${tag}" ... `)
     const results = await fetchTracksForTag(tag)
     let added = 0
+    let excluded = 0
     for (const raw of results) {
+      const genres = raw.musicinfo?.tags?.genres ?? []
+      if (genres.some((g) => EXCLUDED_GENRES.has(g))) {
+        excluded++
+        continue
+      }
       if (!byId.has(raw.id)) {
         byId.set(raw.id, toTrack(raw, tag))
         added++
       }
     }
-    console.log(`${results.length} tracks, ${added} new`)
+    console.log(`${results.length} tracks, ${added} new, ${excluded} excluded (energetic genre)`)
     if (i < CALMING_TAGS.length - 1) await sleep(REQUEST_DELAY_MS)
   }
 
