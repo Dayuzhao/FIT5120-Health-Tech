@@ -7,6 +7,7 @@ import CompleteView from '../views/CompleteView.vue'
 import AboutView from '../views/AboutView.vue'
 import ContactView from '../views/ContactView.vue'
 import HelpFinderView from '../views/HelpFinderView.vue'
+import GameView from '../views/GameView.vue'
 import AtmosphereView from '../views/AtmosphereView.vue'
 
 const router = createRouter({
@@ -25,6 +26,11 @@ const router = createRouter({
       path: '/urge',
       name: 'urge',
       component: UrgeView,
+    },
+    {
+      path: '/play',
+      name: 'play',
+      component: GameView,
     },
     {
       path: '/task',
