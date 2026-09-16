@@ -9,6 +9,7 @@ const router = useRouter()
 const tasks = ref([])
 const currentTask = ref(null)
 const urgeEventId = ref(null)
+const urgeCategory = ref(null)
 
 const loading = ref(true)
 const error = ref('')
@@ -18,7 +19,15 @@ const completing = ref(false)
 const hasTask = computed(() => currentTask.value !== null)
 
 function chooseRandomTask(excludeId = null) {
-  const candidates = tasks.value.filter((task) => task.id !== excludeId)
+  const pool = tasks.value.filter((task) => task.id !== excludeId)
+
+  // Prefer tasks tagged for the current urge category; fall back to the full
+  // pool when none match (e.g. no urge type, or that category has no matches).
+  const matching = urgeCategory.value
+    ? pool.filter((task) => task.categories?.includes(urgeCategory.value))
+    : []
+
+  const candidates = matching.length > 0 ? matching : pool
 
   if (candidates.length === 0) {
     return tasks.value[0] ?? null
@@ -50,6 +59,7 @@ async function loadTask() {
 
       if (existingEvent) {
         urgeEventId.value = existingEvent.id
+        urgeCategory.value = existingEvent.urgeType ?? null
 
         if (existingEvent.taskId) {
           const existingTask = tasks.value.find(
