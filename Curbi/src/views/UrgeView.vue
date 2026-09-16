@@ -11,22 +11,11 @@ const startError = ref('')
 
 const urges = [
   {
-    id: 'search-symptoms',
-    icon: '🔍',
-    title: 'Search symptoms online',
-    description: 'I feel like Googling my symptoms again.',
-  },
-  {
-    id: 'check-body',
-    icon: '❤️',
-    title: 'Check my pulse or body',
-    description: 'I want to repeatedly check a physical sensation.',
-  },
-  {
-    id: 'check-change',
-    icon: '🪞',
-    title: 'Look at a physical change again',
-    description: 'I want to keep checking the same spot or body area.',
+    id: 'body-checking',
+    icon: '🩺',
+    title: 'Check my body or a symptom',
+    description:
+      'I want to repeatedly check my pulse, a physical sensation, or the same spot or change on my body.',
   },
   {
     id: 'reassurance',
@@ -35,10 +24,17 @@ const urges = [
     description: 'I want someone else to tell me that everything is okay.',
   },
   {
-    id: 'reread-health-info',
-    icon: '📄',
-    title: 'Re-read health information',
-    description: 'I want to check an old result, report or health page again.',
+    id: 'info-searching',
+    icon: '🔍',
+    title: 'Search or re-read health information',
+    description:
+      'I want to search my symptoms online, or check an old result, report or health page again.',
+  },
+  {
+    id: 'other',
+    icon: '❓',
+    title: 'Something else, or not sure',
+    description: "My urge doesn't quite match these, or I'm not sure what it is.",
   },
 ]
 
