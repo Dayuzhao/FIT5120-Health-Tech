@@ -277,7 +277,7 @@ onMounted(loadTask)
         </p>
 
         <div class="instructions">
-          <h2>What to do</h2>
+          <h2>What to do next</h2>
 
           <div class="instruction">
             <span class="step-number">1</span>
@@ -395,16 +395,25 @@ h1 {
 }
 
 .instructions h2 {
-  margin: 0 0 18px;
-  color: #294433;
-  font-size: 19px;
+  margin: 0 0 22px;
+
+  color: #20392a;
+
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .instruction {
   display: flex;
   align-items: flex-start;
-  gap: 15px;
-  margin-bottom: 18px;
+  gap: 16px;
+
+  padding: 16px 18px;
+
+  border-radius: 16px;
+
+  background: #f7faf7;
 }
 
 .step-number {
@@ -421,10 +430,13 @@ h1 {
 }
 
 .instruction p {
-  margin: 3px 0 0;
-  color: #606d64;
-  font-size: 15px;
-  line-height: 1.6;
+  margin: 0;
+
+  color: #4f6256;
+
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.65;
 }
 
 .timer-button {

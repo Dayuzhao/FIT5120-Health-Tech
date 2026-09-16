@@ -1,3 +1,13 @@
+<script setup>
+import { ref } from 'vue'
+
+const selectedFeeling = ref('')
+
+const selectFeeling = (feeling) => {
+  selectedFeeling.value = feeling
+}
+</script>
+
 <template>
   <main class="complete-page">
     <section class="complete-card">
@@ -22,13 +32,113 @@
         </p>
       </div>
 
-      <RouterLink to="/home" class="home-button">
-        Back to Home
-      </RouterLink>
+      <div class="feedback-section">
+        <p class="feedback-label">
+          OPTIONAL CHECK-IN
+        </p>
 
-      <RouterLink to="/urge" class="another-option">
-        Try another support option
-      </RouterLink>
+        <h2>How do you feel after this pause?</h2>
+
+        <p class="feedback-intro">
+          There is no right answer. Choose what feels closest right now.
+        </p>
+
+        <div class="feedback-options">
+          <button
+            type="button"
+            class="feedback-option"
+            :class="{ selected: selectedFeeling === 'calmer' }"
+            @click="selectFeeling('calmer')"
+          >
+            <span class="feedback-icon">🌿</span>
+
+            <span class="feedback-copy">
+              <strong>A little calmer</strong>
+              <small>I feel a bit more settled.</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="feedback-option"
+            :class="{ selected: selectedFeeling === 'same' }"
+            @click="selectFeeling('same')"
+          >
+            <span class="feedback-icon">○</span>
+
+            <span class="feedback-copy">
+              <strong>About the same</strong>
+              <small>Not much has changed yet.</small>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="feedback-option"
+            :class="{ selected: selectedFeeling === 'unsettled' }"
+            @click="selectFeeling('unsettled')"
+          >
+            <span class="feedback-icon">☁</span>
+
+            <span class="feedback-copy">
+              <strong>Still unsettled</strong>
+              <small>I may want another kind of support.</small>
+            </span>
+          </button>
+        </div>
+
+        <div
+          v-if="selectedFeeling"
+          class="next-step"
+        >
+          <template v-if="selectedFeeling === 'calmer'">
+            <p class="next-step-label">NEXT STEP</p>
+
+            <h3>Ready to continue?</h3>
+
+            <RouterLink
+              to="/"
+              class="next-step-button"
+            >
+              Back to home
+            </RouterLink>
+          </template>
+
+          <template v-else-if="selectedFeeling === 'same'">
+            <p class="next-step-label">NEXT STEP</p>
+
+            <h3>Want to try something different?</h3>
+
+            <RouterLink
+              to="/urge"
+              class="next-step-button"
+            >
+              Try another support option
+            </RouterLink>
+          </template>
+
+          <template v-else>
+            <p class="next-step-label">NEXT STEP</p>
+
+            <h3>Would another kind of support help?</h3>
+
+            <RouterLink
+              to="/help"
+              class="next-step-button"
+            >
+              Find support
+            </RouterLink>
+          </template>
+        </div>
+
+        <RouterLink
+          v-if="!selectedFeeling"
+          to="/"
+          class="skip-feedback"
+        >
+          Prefer not to say
+        </RouterLink>
+      </div>
 
       <p class="support-note">
         Curbi is a wellbeing support tool and does not provide medical
@@ -113,32 +223,6 @@ h1 {
   line-height: 1.65;
 }
 
-.home-button {
-  display: block;
-  margin-top: 30px;
-  padding: 15px 22px;
-  border-radius: 10px;
-  background: #4f815f;
-  color: white;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.home-button:hover {
-  background: #416f50;
-}
-
-.another-option {
-  display: inline-block;
-  margin-top: 18px;
-  color: #62766a;
-  text-decoration: none;
-}
-
-.another-option:hover {
-  text-decoration: underline;
-}
-
 .support-note {
   margin: 30px 0 0;
   padding-top: 22px;
@@ -146,6 +230,197 @@ h1 {
   color: #879088;
   font-size: 13px;
   line-height: 1.6;
+}
+
+.feedback-section {
+  margin-top: 30px;
+  padding: 28px;
+
+  border: 1px solid rgba(70, 115, 85, 0.12);
+  border-radius: 24px;
+
+  background: #f7faf7;
+}
+
+.feedback-label {
+  margin: 0 0 10px;
+
+  color: #688573;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+
+.feedback-section h2 {
+  margin: 0;
+
+  color: #294433;
+
+  font-size: 24px;
+}
+
+.feedback-intro {
+  margin: 10px 0 22px;
+
+  color: #68766d;
+
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.feedback-options {
+  display: grid;
+  gap: 12px;
+}
+
+.feedback-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  width: 100%;
+
+  padding: 16px 18px;
+
+  border: 1px solid #d8e3da;
+  border-radius: 16px;
+
+  background: white;
+
+  color: #294433;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.feedback-option:hover {
+  border-color: #7fa08a;
+
+  transform: translateY(-1px);
+}
+
+.feedback-option.selected {
+  border-color: #47765a;
+
+  background: #edf5ef;
+}
+
+.feedback-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+
+  background: #edf5ef;
+
+  font-size: 18px;
+}
+
+.feedback-option span:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.feedback-option strong {
+  font-size: 16px;
+}
+
+.feedback-option small {
+  color: #748078;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.next-step {
+  margin-top: 22px;
+  padding: 22px;
+
+  border-radius: 18px;
+
+  background: #eaf3ec;
+
+  text-align: center;
+}
+
+.next-step-label {
+  margin: 0 0 8px;
+
+  color: #688573;
+
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.next-step h3 {
+  margin: 0 0 18px;
+
+  color: #294433;
+
+  font-size: 20px;
+}
+
+.next-step-button {
+  display: inline-block;
+
+  padding: 13px 22px;
+
+  border-radius: 999px;
+
+  background: #47765a;
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  text-decoration: none;
+
+  transition:
+    background 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.next-step-button:hover {
+  background: #386548;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 8px 20px
+    rgba(54, 94, 68, 0.16);
+}
+
+.skip-feedback {
+  display: block;
+
+  width: fit-content;
+  margin: 18px auto 0;
+
+  color: #63736a;
+
+  font-size: 15px;
+  font-weight: 500;
+
+  text-decoration: none;
+}
+
+.skip-feedback:hover {
+  color: #365c43;
+  text-decoration: underline;
 }
 
 @media (max-width: 700px) {

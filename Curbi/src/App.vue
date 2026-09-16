@@ -31,6 +31,47 @@ body {
   min-width: 320px;
   background: #edf4ee;
 }
+
+html,
+body,
+button,
+input,
+textarea,
+select {
+  font-family:
+    'Nunito',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+}
+
+body {
+  color: #2f4437;
+
+  font-size: 16px;
+  line-height: 1.6;
+
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family:
+    'Nunito',
+    system-ui,
+    sans-serif;
+
+  color: #20392a;
+
+  font-weight: 700;
+}
 </style>
 
 <style scoped>
