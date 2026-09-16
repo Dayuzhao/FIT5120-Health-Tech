@@ -67,12 +67,11 @@ onBeforeUnmount(() => {
 
         <h1>
           A little space
-          <span>before the next check.</span>
+          <span>before the next check</span>
         </h1>
 
         <p class="hero-intro">
-          Curbi helps you pause repeated health checking and redirect your
-          attention towards a different next step.
+          Curbi offers a gentle space to pause before checking and try a different next step
         </p>
 
         <div class="hero-actions">
