@@ -230,6 +230,19 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.closing-section {
+  min-height: 100vh;
+  padding-bottom: 100px;
+  margin-bottom: 0;
+
+  background: transparent;
+}
+
+.closing-section.section-panel,
+.closing-section.section-active {
+  background: transparent;
+}
+
 .hero-companion {
   position: fixed;
   right: 28px;
@@ -852,10 +865,6 @@ onBeforeUnmount(() => {
 
 /* PRIVACY */
 .privacy-note {
-  padding: 30px 32px 40px;
-
-  background: #f7faf7;
-
   color: #587062;
 
   text-align: center;
@@ -866,12 +875,11 @@ onBeforeUnmount(() => {
 
   margin: 7px auto 0;
 
-  color: #768179;
+  color: #4e5751;
 
   font-size: 13px;
   line-height: 1.6;
 }
-
 
 /* SCROLL REVEAL */
 .hero-content,
