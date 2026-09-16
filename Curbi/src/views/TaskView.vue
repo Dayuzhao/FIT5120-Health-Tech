@@ -222,7 +222,7 @@ async function completeTask() {
       name: 'complete',
     })
   } catch (completeError) {
-    console.error('Unable to record the completed task:', completeError)
+    console.error('Unable to complete task:', completeError)
     error.value =
       'We could not record the completed task. Please try again.'
   } finally {
