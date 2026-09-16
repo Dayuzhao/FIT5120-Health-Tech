@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, ensureSeeded } from '@/db'
 
@@ -17,6 +17,72 @@ const switching = ref(false)
 const completing = ref(false)
 
 const hasTask = computed(() => currentTask.value !== null)
+
+// Suggested-length timer (US1.6) — starts only when the user taps the ring,
+// never auto-starts, and never blocks or delays "I've completed this task".
+const TIMER_RADIUS = 54
+const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS
+
+const remainingSeconds = ref(0)
+const timerRunning = ref(false)
+let timerInterval = null
+
+const totalSeconds = computed(() => currentTask.value?.durationSeconds ?? 0)
+
+const formattedTimeRemaining = computed(() => {
+  const minutes = Math.floor(remainingSeconds.value / 60)
+  const seconds = remainingSeconds.value % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+})
+
+const timerDashOffset = computed(() => {
+  const progress =
+    totalSeconds.value > 0 ? remainingSeconds.value / totalSeconds.value : 0
+  return TIMER_CIRCUMFERENCE * (1 - progress)
+})
+
+const timerButtonLabel = computed(() => {
+  if (timerRunning.value) return 'Pause timer'
+  return remainingSeconds.value === totalSeconds.value
+    ? 'Start timer'
+    : 'Resume timer'
+})
+
+function clearTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
+function resetTimer() {
+  clearTimerInterval()
+  timerRunning.value = false
+  remainingSeconds.value = currentTask.value?.durationSeconds ?? 0
+}
+
+function toggleTimer() {
+  if (timerRunning.value) {
+    clearTimerInterval()
+    timerRunning.value = false
+    return
+  }
+
+  if (remainingSeconds.value <= 0) return
+
+  timerRunning.value = true
+  timerInterval = setInterval(() => {
+    remainingSeconds.value = Math.max(0, remainingSeconds.value - 1)
+
+    if (remainingSeconds.value === 0) {
+      clearTimerInterval()
+      timerRunning.value = false
+    }
+  }, 1000)
+}
+
+watch(currentTask, resetTimer)
+onUnmounted(clearTimerInterval)
 
 function chooseRandomTask(excludeId = null) {
   const pool = tasks.value.filter((task) => task.id !== excludeId)
@@ -220,6 +286,30 @@ onMounted(loadTask)
         </div>
 
         <button
+          v-if="totalSeconds > 0"
+          type="button"
+          class="timer-button"
+          :aria-label="timerButtonLabel"
+          @click="toggleTimer"
+        >
+          <svg class="timer-ring" viewBox="0 0 120 120">
+            <circle class="timer-ring-track" cx="60" cy="60" r="54" />
+            <circle
+              class="timer-ring-progress"
+              cx="60"
+              cy="60"
+              r="54"
+              :stroke-dasharray="TIMER_CIRCUMFERENCE"
+              :stroke-dashoffset="timerDashOffset"
+            />
+          </svg>
+          <span class="timer-label">
+            <span class="timer-time">{{ formattedTimeRemaining }}</span>
+            <span class="timer-icon">{{ timerRunning ? '⏸' : '▶' }}</span>
+          </span>
+        </button>
+
+        <button
           class="complete-button"
           type="button"
           :disabled="completing"
@@ -335,6 +425,60 @@ h1 {
   color: #606d64;
   font-size: 15px;
   line-height: 1.6;
+}
+
+.timer-button {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  display: block;
+  margin: 8px auto 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-ring-track {
+  fill: none;
+  stroke: #e2e9e4;
+  stroke-width: 8;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: #4f815f;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.timer-time {
+  color: #20392a;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-icon {
+  color: #5d856a;
+  font-size: 13px;
 }
 
 .complete-button {
