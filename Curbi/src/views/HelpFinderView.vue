@@ -191,36 +191,24 @@ function handleSubmit() {
               <div>
                 <h3>{{ service.name }}</h3>
 
-                <p v-if="service.distanceLabel" class="distance-inline">
-                  {{ service.distanceLabel }} from your search location
-                </p>
-              </div>
-
-              <span v-if="service.distanceLabel" class="distance">
-                {{ service.distanceLabel }}
-              </span>
-            </div>
-
-            <div class="service-details">
-              <p v-if="service.address">
-                <strong>Address</strong>
-                <span>{{ service.address }}</span>
-              </p>
-
-              <p v-if="service.suburb || service.postcode">
-                <strong>Suburb</strong>
-                <span>
+                <p
+                  v-if="service.suburb || service.postcode"
+                  class="service-summary-location"
+                >
                   {{ service.suburb }}
+
                   <template v-if="service.postcode">
                     VIC {{ service.postcode }}
                   </template>
-                </span>
-              </p>
+                </p>
+              </div>
 
-              <p v-if="service.openingHours">
-                <strong>Opening hours</strong>
-                <span>{{ service.openingHours }}</span>
-              </p>
+              <span
+                v-if="service.distanceLabel"
+                class="distance"
+              >
+                {{ service.distanceLabel }}
+              </span>
             </div>
 
             <button
@@ -239,34 +227,65 @@ function handleSubmit() {
               v-if="expandedServiceId === service.id"
               class="service-more"
             >
-              <div class="detail-row">
-                <div v-if="service.name">
-                  <span class="detail-label">Service</span>
-                  <p>{{ service.name }}</p>
+              <p class="detail-heading">
+                Service details
+              </p>
+
+              <div class="detail-grid">
+                <div
+                  v-if="service.address"
+                  class="detail-item"
+                >
+                  <span class="detail-label">Address</span>
+
+                  <p>
+                    {{ service.address }}
+                  </p>
                 </div>
 
-                <div v-if="service.state">
+                <div
+                  v-if="service.suburb"
+                  class="detail-item"
+                >
+                  <span class="detail-label">Suburb</span>
+
+                  <p>
+                    {{ service.suburb }}
+                  </p>
+                </div>
+
+                <div
+                  v-if="service.state"
+                  class="detail-item"
+                >
                   <span class="detail-label">State</span>
-                  <p>{{ service.state }}</p>
+
+                  <p>
+                    {{ service.state }}
+                  </p>
                 </div>
-              </div>
 
-              <div v-if="service.address" class="service-description">
-                <span class="detail-label">Address</span>
-                <p>{{ service.address }}</p>
-              </div>
+                <div
+                  v-if="service.postcode"
+                  class="detail-item"
+                >
+                  <span class="detail-label">Postcode</span>
 
-              <div v-if="service.openingHours" class="service-description">
-                <span class="detail-label">Opening hours</span>
-                <p>{{ service.openingHours }}</p>
+                  <p>
+                    {{ service.postcode }}
+                  </p>
+                </div>
               </div>
 
               <div
-                v-if="service.distanceLabel"
-                class="service-description"
+                v-if="service.openingHours"
+                class="opening-hours"
               >
-                <span class="detail-label">Distance</span>
-                <p>{{ service.distanceLabel }}</p>
+                <span class="detail-label">Opening hours</span>
+
+                <p>
+                  {{ service.openingHours }}
+                </p>
               </div>
             </div>
           </article>
@@ -507,10 +526,13 @@ h1 {
   font-size: 19px;
 }
 
-.distance-inline {
-  margin: 6px 0 0;
-  color: #7a857d;
-  font-size: 13px;
+.service-summary-location {
+  margin: 8px 0 0;
+
+  color: #68766d;
+
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .distance {
@@ -521,34 +543,6 @@ h1 {
   color: #4f765a;
   font-size: 12px;
   font-weight: 600;
-}
-
-.service-details {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e7ece8;
-}
-
-.service-details p {
-  margin: 0;
-}
-
-.service-details strong {
-  display: block;
-  margin-bottom: 6px;
-  color: #758078;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-}
-
-.service-details span {
-  color: #4f5e54;
-  font-size: 14px;
-  line-height: 1.5;
 }
 
 .details-button {
@@ -569,16 +563,58 @@ h1 {
 
 .service-more {
   margin-top: 20px;
-  padding: 22px;
+  padding: 24px;
+
   border-radius: 14px;
+
   background: #f5f8f6;
 }
 
-.detail-row {
+.detail-heading {
+  margin: 0 0 20px;
+
+  color: #294433;
+
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.detail-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-bottom: 20px;
+
+  gap: 20px 32px;
+}
+
+.detail-item p,
+.opening-hours p {
+  margin: 0;
+
+  color: #4f5e54;
+
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.detail-label {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #66766c;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+
+  text-transform: uppercase;
+}
+
+.opening-hours {
+  margin-top: 22px;
+  padding-top: 20px;
+
+  border-top: 1px solid #dfe7e1;
 }
 
 .detail-label {
@@ -589,20 +625,6 @@ h1 {
   font-weight: 700;
   letter-spacing: 0.7px;
   text-transform: uppercase;
-}
-
-.detail-row p,
-.service-description p {
-  margin: 0;
-  color: #4f5e54;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.service-description {
-  margin-top: 18px;
-  padding-top: 18px;
-  border-top: 1px solid #dfe7e1;
 }
 
 .data-note {
@@ -645,7 +667,7 @@ h1 {
     grid-template-columns: 1fr;
   }
 
-  .detail-row {
+  .detail-grid {
     grid-template-columns: 1fr;
     gap: 18px;
   }
