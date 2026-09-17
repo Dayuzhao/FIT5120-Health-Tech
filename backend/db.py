@@ -52,19 +52,54 @@ CREATE TABLE IF NOT EXISTS postcodes (
 );
 CREATE INDEX IF NOT EXISTS idx_postcodes_suburb ON postcodes (suburb);
 
--- Epic 4 / US4 onboarding snapshot: one row per (financial year, measure), so a
--- new AIHW release just adds rows. AC1 uses serviceRatePer1000; patientRatePer1000
--- is loaded too since build-aihw.js already computes it.
-CREATE TABLE IF NOT EXISTS regional_access (
-    financial_year  TEXT NOT NULL,
-    metric          TEXT NOT NULL,
-    metro           DOUBLE PRECISION NOT NULL,
-    regional        DOUBLE PRECISION NOT NULL,
-    gap_pct         DOUBLE PRECISION,
-    source          TEXT NOT NULL,
-    source_url      TEXT,
-    PRIMARY KEY (financial_year, metric)
+-- Epic 8 / US8 species dex. "taxon_order" not "order" (SQL reserved word).
+-- observation_count is a rarity signal from real GBIF data for the app to
+-- surface later; it is never used to drive unlock rules (those stay tied to
+-- objective task-completion counts only).
+CREATE TABLE IF NOT EXISTS species (
+    scientific_name   TEXT PRIMARY KEY,
+    common_name       TEXT NOT NULL,
+    taxon_order       TEXT NOT NULL,
+    gbif_usage_key    INTEGER NOT NULL,
+    iucn_status       TEXT,
+    observation_count INTEGER,
+    source_url        TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_species_order ON species (taxon_order);
+
+-- One-to-many: 3 images per species, sort_order 1 is the dex card's primary
+-- image. A real foreign-key relation (not a JSONB array) so the ERD reflects
+-- it and a future image carousel needs no schema change.
+CREATE TABLE IF NOT EXISTS species_images (
+    scientific_name     TEXT NOT NULL REFERENCES species (scientific_name) ON DELETE CASCADE,
+    sort_order          SMALLINT NOT NULL,
+    image_url           TEXT NOT NULL,
+    license             TEXT NOT NULL,
+    gbif_occurrence_key BIGINT,
+    PRIMARY KEY (scientific_name, sort_order)
+);
+
+-- Epic 6 / US6 global background-music player. Jamendo's whole catalogue is
+-- CC-licensed by platform design, so unlike `species` there is no license
+-- allow-list here — the three license_cc_* flags just drive attribution
+-- text, since the player streams tracks unmodified regardless of NC/ND/SA.
+CREATE TABLE IF NOT EXISTS tracks (
+    jamendo_id       TEXT PRIMARY KEY,
+    name             TEXT NOT NULL,
+    artist_name      TEXT NOT NULL,
+    album_name       TEXT,
+    album_image_url  TEXT,
+    audio_url        TEXT NOT NULL,
+    duration_seconds INTEGER NOT NULL,
+    license_url      TEXT NOT NULL,
+    license_cc_nc    BOOLEAN NOT NULL,
+    license_cc_nd    BOOLEAN NOT NULL,
+    license_cc_sa    BOOLEAN NOT NULL,
+    genres           TEXT[] NOT NULL DEFAULT '{}',
+    matched_tag      TEXT NOT NULL,
+    share_url        TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_tracks_matched_tag ON tracks (matched_tag);
 """
 
 # Small pool: the endpoints are sync `def`, RDS db.t4g.micro allows ~80

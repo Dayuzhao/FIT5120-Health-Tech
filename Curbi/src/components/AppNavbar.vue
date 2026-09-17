@@ -1,34 +1,39 @@
 <template>
   <header class="navbar">
     <div class="nav-container">
-      <RouterLink to="/home" class="logo">
-        Curbi
+      <RouterLink to="/" class="logo" aria-label="Curbi home">
+        <img src="/images/curbi-logo.png" alt="Curbi" />
       </RouterLink>
 
       <nav class="nav-links">
-        <RouterLink to="/home">Home</RouterLink>
+        <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/urge">Urge Support</RouterLink>
-        <RouterLink to="/help" class="nav-link">Find Support</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-        <RouterLink to="/contact">Contact</RouterLink>
+        <RouterLink to="/play">Play</RouterLink>
+        <RouterLink to="/help">Find Support</RouterLink>
       </nav>
 
-      <div class="brand-icon">🌿</div>
     </div>
   </header>
 </template>
 
 <style scoped>
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
   width: 100%;
-  background: white;
-  border-bottom: 1px solid #e7ece8;
+
+  background: rgba(244, 249, 244, 0.82);
+  backdrop-filter: blur(14px);
+
+  border-bottom: 1px solid rgba(68, 112, 82, 0.12);
 }
 
 .nav-container {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 18px 32px;
+  padding: 14px 32px;
 
   display: flex;
   align-items: center;
@@ -36,23 +41,46 @@
 }
 
 .logo {
-  font-size: 28px;
-  font-weight: 700;
-  color: #245b3b;
+  display: flex;
+  align-items: center;
   text-decoration: none;
+}
+
+.logo img {
+  display: block;
+  width: 150px;
+  height: auto;
 }
 
 .nav-links {
   display: flex;
-  gap: 36px;
+  align-items: center;
+  gap: 32px;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .nav-links a {
-  color: #3f4943;
+  color: #4e6254;
   text-decoration: none;
-  font-size: 15px;
-  padding: 8px 0;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  padding: 8px 2px;
+
   border-bottom: 2px solid transparent;
+
+  transition:
+    color 180ms ease,
+    border-color 180ms ease;
 }
 
 .nav-links a:hover {

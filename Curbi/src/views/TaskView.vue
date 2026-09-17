@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, ensureSeeded } from '@/db'
 
@@ -9,6 +9,7 @@ const router = useRouter()
 const tasks = ref([])
 const currentTask = ref(null)
 const urgeEventId = ref(null)
+const urgeCategory = ref(null)
 
 const loading = ref(true)
 const error = ref('')
@@ -17,8 +18,82 @@ const completing = ref(false)
 
 const hasTask = computed(() => currentTask.value !== null)
 
+// Suggested-length timer (US1.6) — starts only when the user taps the ring,
+// never auto-starts, and never blocks or delays "I've completed this task".
+const TIMER_RADIUS = 54
+const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS
+
+const remainingSeconds = ref(0)
+const timerRunning = ref(false)
+let timerInterval = null
+
+const totalSeconds = computed(() => currentTask.value?.durationSeconds ?? 0)
+
+const formattedTimeRemaining = computed(() => {
+  const minutes = Math.floor(remainingSeconds.value / 60)
+  const seconds = remainingSeconds.value % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+})
+
+const timerDashOffset = computed(() => {
+  const progress =
+    totalSeconds.value > 0 ? remainingSeconds.value / totalSeconds.value : 0
+  return TIMER_CIRCUMFERENCE * (1 - progress)
+})
+
+const timerButtonLabel = computed(() => {
+  if (timerRunning.value) return 'Pause timer'
+  return remainingSeconds.value === totalSeconds.value
+    ? 'Start timer'
+    : 'Resume timer'
+})
+
+function clearTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+}
+
+function resetTimer() {
+  clearTimerInterval()
+  timerRunning.value = false
+  remainingSeconds.value = currentTask.value?.durationSeconds ?? 0
+}
+
+function toggleTimer() {
+  if (timerRunning.value) {
+    clearTimerInterval()
+    timerRunning.value = false
+    return
+  }
+
+  if (remainingSeconds.value <= 0) return
+
+  timerRunning.value = true
+  timerInterval = setInterval(() => {
+    remainingSeconds.value = Math.max(0, remainingSeconds.value - 1)
+
+    if (remainingSeconds.value === 0) {
+      clearTimerInterval()
+      timerRunning.value = false
+    }
+  }, 1000)
+}
+
+watch(currentTask, resetTimer)
+onUnmounted(clearTimerInterval)
+
 function chooseRandomTask(excludeId = null) {
-  const candidates = tasks.value.filter((task) => task.id !== excludeId)
+  const pool = tasks.value.filter((task) => task.id !== excludeId)
+
+  // Prefer tasks tagged for the current urge category; fall back to the full
+  // pool when none match (e.g. no urge type, or that category has no matches).
+  const matching = urgeCategory.value
+    ? pool.filter((task) => task.categories?.includes(urgeCategory.value))
+    : []
+
+  const candidates = matching.length > 0 ? matching : pool
 
   if (candidates.length === 0) {
     return tasks.value[0] ?? null
@@ -50,6 +125,7 @@ async function loadTask() {
 
       if (existingEvent) {
         urgeEventId.value = existingEvent.id
+        urgeCategory.value = existingEvent.urgeType ?? null
 
         if (existingEvent.taskId) {
           const existingTask = tasks.value.find(
@@ -201,13 +277,37 @@ onMounted(loadTask)
         </p>
 
         <div class="instructions">
-          <h2>What to do</h2>
+          <h2>What to do next</h2>
 
           <div class="instruction">
             <span class="step-number">1</span>
             <p>{{ currentTask.body }}</p>
           </div>
         </div>
+
+        <button
+          v-if="totalSeconds > 0"
+          type="button"
+          class="timer-button"
+          :aria-label="timerButtonLabel"
+          @click="toggleTimer"
+        >
+          <svg class="timer-ring" viewBox="0 0 120 120">
+            <circle class="timer-ring-track" cx="60" cy="60" r="54" />
+            <circle
+              class="timer-ring-progress"
+              cx="60"
+              cy="60"
+              r="54"
+              :stroke-dasharray="TIMER_CIRCUMFERENCE"
+              :stroke-dashoffset="timerDashOffset"
+            />
+          </svg>
+          <span class="timer-label">
+            <span class="timer-time">{{ formattedTimeRemaining }}</span>
+            <span class="timer-icon">{{ timerRunning ? '⏸' : '▶' }}</span>
+          </span>
+        </button>
 
         <button
           class="complete-button"
@@ -295,16 +395,25 @@ h1 {
 }
 
 .instructions h2 {
-  margin: 0 0 18px;
-  color: #294433;
-  font-size: 19px;
+  margin: 0 0 22px;
+
+  color: #20392a;
+
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .instruction {
   display: flex;
   align-items: flex-start;
-  gap: 15px;
-  margin-bottom: 18px;
+  gap: 16px;
+
+  padding: 16px 18px;
+
+  border-radius: 16px;
+
+  background: #f7faf7;
 }
 
 .step-number {
@@ -321,10 +430,67 @@ h1 {
 }
 
 .instruction p {
-  margin: 3px 0 0;
-  color: #606d64;
-  font-size: 15px;
-  line-height: 1.6;
+  margin: 0;
+
+  color: #4f6256;
+
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.timer-button {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  display: block;
+  margin: 8px auto 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.timer-ring {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-ring-track {
+  fill: none;
+  stroke: #e2e9e4;
+  stroke-width: 8;
+}
+
+.timer-ring-progress {
+  fill: none;
+  stroke: #4f815f;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.timer-time {
+  color: #20392a;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-icon {
+  color: #5d856a;
+  font-size: 13px;
 }
 
 .complete-button {
