@@ -1,5 +1,8 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useMusicPlayer } from '@/composables/useMusicPlayer'
+
+const { setGameMode } = useMusicPlayer()
 
 const gameStarted = ref(false)
 const gameComplete = ref(false)
@@ -26,6 +29,7 @@ const setNewLeafPosition = () => {
 const startGame = () => {
   gameStarted.value = true
   gameComplete.value = false
+  setGameMode(true)
   tapCount.value = 0
   leafVisible.value = true
 
@@ -54,6 +58,7 @@ const moveLeaf = () => {
   leafTimer = setTimeout(() => {
     if (tapCount.value >= targetTaps) {
       gameComplete.value = true
+      setGameMode(false)
       return
     }
 
@@ -73,6 +78,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  setGameMode(false)
+
   if (leafTimer) {
     clearTimeout(leafTimer)
   }

@@ -20,6 +20,18 @@ const loading = ref(false)
 const failed = ref(false)
 const audioEl = ref(null) // the single <audio> element, assigned by MusicPlayer.vue
 
+const BASE_VOLUME = 0.7
+const GAME_VOLUME = 0.85
+const NORMAL_FILTER_FREQUENCY = 6000
+const MUFFLED_FILTER_FREQUENCY = 900
+
+let audioContext = null
+let sourceNode = null
+let filterNode = null
+let gainNode = null
+let gameMode = false
+let modulationTimer = null
+
 const pool = computed(() =>
   activeCategory.value ? tracks.value.filter((t) => t.matchedTag === activeCategory.value) : tracks.value,
 )
@@ -39,12 +51,66 @@ function refillBag() {
   bag.value = shuffleArray(pool.value.map((_, i) => i).filter((i) => i !== currentIndex.value))
 }
 
+function ensureAudioGraph() {
+  if (!audioEl.value || typeof window === 'undefined') return false
+
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextClass) return false
+
+    audioContext = new AudioContextClass()
+    sourceNode = audioContext.createMediaElementSource(audioEl.value)
+    filterNode = audioContext.createBiquadFilter()
+    gainNode = audioContext.createGain()
+
+    // A low-pass filter keeps the music soft without making it sound thin.
+    filterNode.type = 'lowpass'
+    filterNode.frequency.value = NORMAL_FILTER_FREQUENCY
+    filterNode.Q.value = 0.5
+    gainNode.gain.value = BASE_VOLUME
+    sourceNode.connect(filterNode).connect(gainNode).connect(audioContext.destination)
+  }
+
+  return true
+}
+
+function applyAudioMode() {
+  if (!ensureAudioGraph()) return
+
+  const now = audioContext.currentTime
+  const targetVolume = gameMode ? GAME_VOLUME : BASE_VOLUME
+  filterNode.frequency.cancelScheduledValues(now)
+  filterNode.frequency.linearRampToValueAtTime(NORMAL_FILTER_FREQUENCY, now + 0.2)
+  gainNode.gain.cancelScheduledValues(now)
+  gainNode.gain.linearRampToValueAtTime(targetVolume, now + 0.2)
+}
+
+function setGameMode(enabled) {
+  gameMode = enabled
+  applyAudioMode()
+}
+
+function modulateAudio(duration = 360) {
+  if (!ensureAudioGraph()) return
+
+  const now = audioContext.currentTime
+  filterNode.frequency.cancelScheduledValues(now)
+  filterNode.frequency.linearRampToValueAtTime(MUFFLED_FILTER_FREQUENCY, now + 0.05)
+  clearTimeout(modulationTimer)
+  modulationTimer = setTimeout(() => applyAudioMode(), duration)
+}
+
 async function loadTracks() {
   if (tracks.value.length > 0 || loading.value) return
   loading.value = true
   failed.value = false
   try {
     tracks.value = await fetchTracks()
+    currentIndex.value = tracks.value.length ? Math.floor(Math.random() * tracks.value.length) : 0
+    if (tracks.value.length > 0) {
+      await nextTick()
+      play()
+    }
   } catch (error) {
     console.error('Unable to load tracks:', error)
     failed.value = true
@@ -54,6 +120,9 @@ async function loadTracks() {
 }
 
 function play() {
+  ensureAudioGraph()
+  if (audioContext?.state === 'suspended') audioContext.resume().catch(() => {})
+  applyAudioMode()
   isPlaying.value = true
   audioEl.value?.play().catch(() => {
     isPlaying.value = false
@@ -143,5 +212,7 @@ export function useMusicPlayer() {
     playCategory,
     toggleShuffle,
     toggleMute,
+    setGameMode,
+    modulateAudio,
   }
 }

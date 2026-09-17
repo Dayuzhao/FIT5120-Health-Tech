@@ -1,7 +1,18 @@
 <script setup>
+import { onBeforeUnmount, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import AppNavbar from './components/AppNavbar.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import { useMusicPlayer } from './composables/useMusicPlayer'
+
+const { modulateAudio } = useMusicPlayer()
+
+function handleAudioInput(event) {
+  if (event.target.closest('button, a')) modulateAudio()
+}
+
+onMounted(() => document.addEventListener('pointerdown', handleAudioInput, true))
+onBeforeUnmount(() => document.removeEventListener('pointerdown', handleAudioInput, true))
 </script>
 
 <template>

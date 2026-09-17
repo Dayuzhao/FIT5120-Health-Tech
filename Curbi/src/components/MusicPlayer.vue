@@ -27,7 +27,7 @@ onMounted(() => {
 
 <template>
   <div class="music-player">
-    <audio ref="audioElRef" :src="currentTrack?.audioUrl" :muted="muted" @ended="goNext"></audio>
+    <audio ref="audioElRef" :src="currentTrack?.audioUrl" crossorigin="anonymous" :muted="muted" @ended="goNext"></audio>
 
     <div class="track-info">
       <img v-if="currentTrack" :src="currentTrack.albumImageUrl" alt="" class="album-art" />
