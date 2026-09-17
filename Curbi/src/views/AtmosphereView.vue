@@ -12,9 +12,7 @@ const router = useRouter()
 const { tracks, activeCategory, loading, failed, loadTracks, playCategory } = useMusicPlayer()
 
 function goBack() {
-  // router.back() falls back to the browser's real history entry, so it
-  // returns to wherever the user actually came from (the homepage card in
-  // the common case) rather than hard-coding "/" and losing that page's state.
+  // Go back to the previous page, or home if there isn't one.
   if (window.history.state?.back) {
     router.back()
   } else {
@@ -29,6 +27,7 @@ const CATEGORY_META = [
   { key: 'lounge', label: 'Lounge', description: 'Relaxed café-style tunes' },
 ]
 
+// Builds the mood cards shown on screen, plus a "Mix" card for all tracks.
 const moods = computed(() => {
   const cards = CATEGORY_META.map((meta) => {
     const inCategory = tracks.value.filter((t) => t.matchedTag === meta.key)
@@ -50,6 +49,7 @@ const moods = computed(() => {
   return cards
 })
 
+// Load the track list once the page is shown.
 onMounted(() => {
   loadTracks()
 })
@@ -72,15 +72,18 @@ onMounted(() => {
       </p>
     </section>
 
+    <!-- Loading state -->
     <div v-if="loading" class="data-loading">
       <div class="loading-spinner"></div>
       <p>Loading the music library…</p>
     </div>
 
+    <!-- Error state -->
     <div v-else-if="failed" class="data-error">
       <p>Music is unavailable right now — try again in a moment.</p>
     </div>
 
+    <!-- Normal state: one card per mood -->
     <section v-else class="mood-grid">
       <button
         v-for="mood in moods"
@@ -91,6 +94,7 @@ onMounted(() => {
         :style="mood.image ? { backgroundImage: `url(${mood.image})` } : null"
         @click="playCategory(mood.key)"
       >
+        <!-- Clicking a card plays that mood's tracks -->
         <span class="mood-card-overlay"></span>
         <span class="mood-card-content">
           <span v-if="!mood.image" class="mood-icon">🌿</span>

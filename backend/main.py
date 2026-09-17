@@ -19,6 +19,7 @@ SERVICE_RESULT_LIMIT = 20
 EARTH_RADIUS_KM = 6371
 
 
+# Calculates the distance in km between two lat/lon points.
 def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     lat1, lon1, lat2, lon2 = (math.radians(v) for v in (lat1, lon1, lat2, lon2))
     d_lat = lat2 - lat1
@@ -54,12 +55,14 @@ app.add_middleware(
 )
 
 
+# Runs when the server starts.
 @app.on_event("startup")
 def on_startup() -> None:
     pool.open()
     init_schema()
 
 
+# Runs when the server stops.
 @app.on_event("shutdown")
 def on_shutdown() -> None:
     pool.close()
@@ -108,6 +111,7 @@ def geocode(q: str) -> dict[str, Any]:
     if not query:
         raise HTTPException(status_code=400, detail="q is required")
 
+    # Digits = postcode search, otherwise = suburb name search.
     if query.isdigit():
         sql = "SELECT suburb, postcode, lat, lon FROM postcodes WHERE postcode = %s ORDER BY suburb"
         param = query
@@ -127,6 +131,7 @@ def parse_near_points(near: str) -> list[tuple[float, float]]:
     suburb centroids sharing one postcode, so distance is measured to the nearest of them."""
     points = []
     for pair in near.split(","):
+        # Splits "lat:lon" into separate lat and lon strings.
         lat_str, _, lon_str = pair.partition(":")
         points.append((float(lat_str), float(lon_str)))
     return points
@@ -153,14 +158,16 @@ def get_services(
                 # ~1,300 VIC rows — small enough to sort by haversine in Python
                 # and avoid a PostGIS dependency.
                 rows = cursor.execute(f"SELECT {columns} FROM services").fetchall()
+                # Distance from each service to the nearest of the given points.
                 scored = [
                     (row, min(haversine_km(lat, lon, row["lat"], row["lon"]) for lat, lon in points))
                     for row in rows
                 ]
-                scored.sort(key=lambda pair: pair[1])
+                scored.sort(key=lambda pair: pair[1])  # nearest first
                 results = [service_row_to_dict(row, distance) for row, distance in scored[:limit]]
                 mode = "distance"
             elif suburb or postcode:
+                # Matches on suburb OR postcode, whichever was provided.
                 rows = cursor.execute(
                     f"SELECT {columns} FROM services "
                     "WHERE UPPER(suburb) = UPPER(%(suburb)s) OR postcode = %(postcode)s",

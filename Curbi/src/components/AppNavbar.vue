@@ -3,6 +3,7 @@
     <div class="nav-container">
       <RouterLink to="/" class="logo" aria-label="Curbi home">
         <img src="/images/curbi-logo.png" alt="Curbi" />
+        <span class="iteration-badge">Iteration 2</span>
       </RouterLink>
 
       <nav class="nav-links">
@@ -50,6 +51,20 @@
   display: block;
   width: 150px;
   height: auto;
+}
+
+.iteration-badge {
+  margin-left: 8px;
+  padding: 3px 10px;
+
+  background: #e7f0e9;
+  color: #2f714a;
+
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+
+  border-radius: 999px;
 }
 
 .nav-links {
