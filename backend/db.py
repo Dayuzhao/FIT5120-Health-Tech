@@ -63,21 +63,42 @@ CREATE TABLE IF NOT EXISTS species (
     gbif_usage_key    INTEGER NOT NULL,
     iucn_status       TEXT,
     observation_count INTEGER,
-    source_url        TEXT
+    source_url        TEXT,
+    fact              TEXT,
+    fact_source_url   TEXT,
+    fact_license      TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_species_order ON species (taxon_order);
+
+-- US8.6: the fact shown on a collectible card is a short excerpt of the
+-- species' English Wikipedia article (CC BY-SA 4.0). fact_source_url links the
+-- article and fact_license holds the licence URL, both required for attribution.
+-- CREATE TABLE IF NOT EXISTS does not touch a table that already exists, so
+-- databases created before US8.6 pick the columns up here (idempotent).
+ALTER TABLE species ADD COLUMN IF NOT EXISTS fact            TEXT;
+ALTER TABLE species ADD COLUMN IF NOT EXISTS fact_source_url TEXT;
+ALTER TABLE species ADD COLUMN IF NOT EXISTS fact_license    TEXT;
 
 -- One-to-many: 3 images per species, sort_order 1 is the dex card's primary
 -- image. A real foreign-key relation (not a JSONB array) so the ERD reflects
 -- it and a future image carousel needs no schema change.
+-- creator / publisher / source_url are the attribution the image licences
+-- require wherever a photo is shown (US8.6); source_url links the original
+-- record (iNaturalist observation, or the GBIF occurrence when there is none).
 CREATE TABLE IF NOT EXISTS species_images (
     scientific_name     TEXT NOT NULL REFERENCES species (scientific_name) ON DELETE CASCADE,
     sort_order          SMALLINT NOT NULL,
     image_url           TEXT NOT NULL,
     license             TEXT NOT NULL,
     gbif_occurrence_key BIGINT,
+    creator             TEXT,
+    publisher           TEXT,
+    source_url          TEXT,
     PRIMARY KEY (scientific_name, sort_order)
 );
+ALTER TABLE species_images ADD COLUMN IF NOT EXISTS creator    TEXT;
+ALTER TABLE species_images ADD COLUMN IF NOT EXISTS publisher  TEXT;
+ALTER TABLE species_images ADD COLUMN IF NOT EXISTS source_url TEXT;
 
 -- Epic 6 / US6 global background-music player. Jamendo's whole catalogue is
 -- CC-licensed by platform design, so unlike `species` there is no license

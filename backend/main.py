@@ -99,6 +99,46 @@ def get_tracks() -> dict[str, Any]:
     }
 
 
+@app.get("/api/v1/species")
+def get_species() -> dict[str, Any]:
+    """Epic 8 / US8.5-8.6 collectible species: 61 rows, each with its Wikipedia
+    fact and ONE image (the human-picked sort_order 1) plus the attribution their
+    licences require wherever they are shown. iucn_status and observation_count
+    are left out on purpose: the collection shows no rarity signal."""
+    with connection() as conn:
+        with conn.cursor(row_factory=dict_row) as cursor:
+            rows = cursor.execute(
+                "SELECT s.scientific_name, s.common_name, s.fact, s.fact_source_url, "
+                "s.fact_license, i.image_url, i.license AS image_license, i.creator, "
+                "i.publisher, i.source_url AS image_source_url "
+                "FROM species s "
+                "JOIN species_images i ON i.scientific_name = s.scientific_name AND i.sort_order = 1 "
+                "ORDER BY s.common_name"
+            ).fetchall()
+
+    return {
+        "species": [
+            {
+                "scientificName": row["scientific_name"],
+                "commonName": row["common_name"],
+                "fact": {
+                    "text": row["fact"],
+                    "sourceUrl": row["fact_source_url"],
+                    "licenseUrl": row["fact_license"],
+                },
+                "image": {
+                    "url": row["image_url"],
+                    "licenseUrl": row["image_license"],
+                    "creator": row["creator"],
+                    "publisher": row["publisher"],
+                    "sourceUrl": row["image_source_url"],
+                },
+            }
+            for row in rows
+        ]
+    }
+
+
 @app.get("/api/v1/geocode")
 def geocode(q: str) -> dict[str, Any]:
     """Resolve a typed suburb name or postcode to coordinates via the `postcodes`

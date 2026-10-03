@@ -31,6 +31,7 @@ On startup the app opens a `psycopg` connection pool and runs
 | `db.py` | Connection pool, schema DDL, `init_schema()` |
 | `build_nhsd_db.py` | Load `../data-pipeline/output/nhsd-services.json` → `services` |
 | `build_postcodes_db.py` | Load `../data-pipeline/output/vic-postcodes.json` → `postcodes` |
+| `build_species_db.py` | Load `../data-pipeline/output/species.json` → `species` + `species_images` |
 
 Each loader upserts on the table's primary key, so it is safe to re-run whenever a
 fresh source file is built. See `../data-pipeline/README.md` for the ETL step that
@@ -44,6 +45,7 @@ produces each JSON file.
 | `GET /api/v1/geocode?q=` | `{query, matches: [{suburb, postcode, lat, lon}]}` — resolves a typed suburb name or numeric postcode against the `postcodes` table |
 | `GET /api/v1/services?near=lat:lon,...` | `{mode: "distance", results: [...]}` — up to 20 services ordered by haversine distance to the nearest given point |
 | `GET /api/v1/services?suburb=&postcode=` | `{mode: "exact", results: [...]}` — services whose suburb or postcode matches |
+| `GET /api/v1/species` | `{species: [{scientificName, commonName, fact: {text, sourceUrl, licenseUrl}, image: {url, licenseUrl, creator, publisher, sourceUrl}}]}` — 61 species ordered by common name (Epic 8 collectibles) |
 
 `distance_km` on each service result is computed per request (it depends on the
 user's location); everything else is stored as loaded.
@@ -53,6 +55,17 @@ user's location); everything else is stored as loaded.
 - **`services`** — `id` PK, name, address, suburb, postcode, state, lat, lon,
   `hours` (JSONB). ~1,300 Victorian mental health services.
 - **`postcodes`** — `(postcode, suburb)` PK, lat, lon. Victorian delivery areas.
+- **`species`** (Epic 8) — `scientific_name` PK, common_name, taxon_order, gbif_usage_key,
+  iucn_status, observation_count, source_url, plus the collectible-card text added in US8.6:
+  `fact` (a short Wikipedia excerpt), `fact_source_url` (the article) and `fact_license`
+  (CC BY-SA 4.0 licence URL). 61 Australian marsupials and monotremes.
+- **`species_images`** (Epic 8) — `(scientific_name, sort_order)` PK, 3 images per species; the
+  app uses `sort_order` 1. `image_url`, `license`, `gbif_occurrence_key`, and the attribution
+  added in US8.6: `creator`, `publisher`, `source_url` (link to the original record).
+
+`GET /api/v1/species` serves them: one primary image per species plus the attribution fields,
+because the licences require attribution wherever the data is shown. `iucn_status` and
+`observation_count` are deliberately not returned — the collection shows no rarity signal.
 
 ## Deployment
 
