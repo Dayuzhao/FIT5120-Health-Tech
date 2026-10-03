@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, ref } from 'vue'
+import CopingSuggestionCard from './CopingSuggestionCard.vue'
 
 const emit = defineEmits(['close'])
 
@@ -10,6 +11,7 @@ const messageList = ref(null)
 const messages = ref([
   {
     id: 1,
+    type: 'text',
     role: 'assistant',
     text: "Hi, I'm Curbi. I'm here if you'd like a small idea or a quick distraction.",
   },
@@ -25,6 +27,17 @@ const scrollToBottom = async () => {
   }
 }
 
+const wantsSuggestion = (text) => {
+  const normalizedText = text.toLowerCase()
+
+  return (
+    normalizedText.includes('something to do') ||
+    normalizedText.includes('suggest') ||
+    normalizedText.includes('idea') ||
+    normalizedText.includes('what can i do')
+  )
+}
+
 const sendMessage = async () => {
   const text = inputMessage.value.trim()
 
@@ -34,6 +47,7 @@ const sendMessage = async () => {
 
   messages.value.push({
     id: messageId++,
+    type: 'text',
     role: 'user',
     text,
   })
@@ -44,17 +58,41 @@ const sendMessage = async () => {
 
   isTyping.value = true
 
-  setTimeout(async () => {
+setTimeout(async () => {
+  if (wantsSuggestion(text)) {
     messages.value.push({
       id: messageId++,
+      type: 'text',
       role: 'assistant',
-      text: "I'm here with you. We can find something small and manageable to do next.",
+      text: 'Here is one small activity you could try.',
     })
 
-    isTyping.value = false
+    messages.value.push({
+      id: messageId++,
+      type: 'suggestion',
+      role: 'assistant',
+      suggestion: {
+        title: 'Take a short reset',
+        description:
+          'Put your phone down and slowly walk around the room for two minutes.',
+        duration: '2 min',
+        category: 'Physical reset',
+      },
+    })
+  } else {
+    messages.value.push({
+      id: messageId++,
+      type: 'text',
+      role: 'assistant',
+      text:
+        "I'm here with you. We can find something small and manageable to do next.",
+    })
+  }
 
-    await scrollToBottom()
-  }, 900)
+  isTyping.value = false
+
+  await scrollToBottom()
+}, 900)
 }
 </script>
 
@@ -77,27 +115,38 @@ const sendMessage = async () => {
     </header>
 
     <div ref="messageList" class="message-list">
-      <div
+        <div
         v-for="message in messages"
         :key="message.id"
         class="message-row"
         :class="`message-${message.role}`"
-      >
-        <div class="message-bubble">
-          {{ message.text }}
+        >
+        <div
+            v-if="message.type === 'text'"
+            class="message-bubble"
+        >
+            {{ message.text }}
         </div>
-      </div>
 
-      <div
-        v-if="isTyping"
-        class="message-row message-assistant"
-      >
-        <div class="message-bubble typing-bubble">
-          <span></span>
-          <span></span>
-          <span></span>
+        <CopingSuggestionCard
+            v-else-if="message.type === 'suggestion'"
+            :title="message.suggestion.title"
+            :description="message.suggestion.description"
+            :duration="message.suggestion.duration"
+            :category="message.suggestion.category"
+        />
         </div>
-      </div>
+
+        <div
+            v-if="isTyping"
+            class="message-row message-assistant"
+        >
+            <div class="message-bubble typing-bubble">
+            <span></span>
+            <span></span>
+            <span></span>
+            </div>
+        </div>
     </div>
 
     <form class="chat-input-row" @submit.prevent="sendMessage">
