@@ -1,8 +1,11 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import CurbiCompanion from '../components/CurbiCompanion.vue'
+import CompanionChatPanel from '../components/CompanionChatPanel.vue'
 
 const activeScene = ref('hero')
+
+const isCompanionChatOpen = ref(false)
 
 const heroSection = ref(null)
 const journeySection = ref(null)
@@ -90,8 +93,15 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="hero-companion">
-        <CurbiCompanion />
+        <CurbiCompanion
+          @open-chat="isCompanionChatOpen = true"
+        />
       </div>
+
+      <CompanionChatPanel
+        v-if="isCompanionChatOpen"
+        @close="isCompanionChatOpen = false"
+      />
 
       <a href="#journey" class="scroll-hint">
         <span>Scroll to explore</span>
