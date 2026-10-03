@@ -5,8 +5,9 @@
 // full schema; other parts of the app should `import { db } from '@/db'` and read
 // or write, never declare their own Dexie instance.
 //
-// All four tables are declared in version(1) even though the first stories only
-// use some of them, so adding a feature later does not force a schema migration.
+// Version 1 declared every table up front so later features would not force a
+// migration; version 2 (Epic 8) adds the progress/collection tables and drops
+// `taskScores`, which belonged to Epic 7 (dropped) and was never written to.
 
 import Dexie from 'dexie'
 import { seedTasks } from './seed'
@@ -22,16 +23,32 @@ db.version(1).stores({
   // { startedAt, endedAt, taskId, outcome: 'completed' | 'skipped' | 'abandoned' | null }
   urgeEvents: '++id, startedAt, taskId',
 
-  // A completed task plus the hidden "did this help" rating (Epic 7).
-  // reliefScore is 1..5, or null when the user skipped the rating.
-  // { urgeEventId, taskId, completedAt, reliefScore }
+  // One row per completed task: purely objective, nothing about how the user
+  // feels. Rows written before Epic 7 was dropped may carry `reliefScore: null`;
+  // it is never read or written any more.
+  // { urgeEventId, taskId, completedAt }
   taskCompletions: '++id, taskId, urgeEventId, completedAt',
 
-  // Internal per-task effectiveness summary, one row per task (Epic 7).
-  // Maintained from taskCompletions; never shown to the user, and in iteration 1
-  // it does not change which task is offered or the task order.
-  // { avgScore, sampleCount, updatedAt }
   taskScores: 'taskId',
+})
+
+db.version(2).stores({
+  tasks: '++id, active',
+  urgeEvents: '++id, startedAt, taskId',
+  taskCompletions: '++id, taskId, urgeEventId, completedAt',
+
+  // `null` deletes the Epic 7 table.
+  taskScores: null,
+
+  // One row per finished round of Leaf Tap (Epic 8). A task completion and a
+  // game completion both count as one "pause" toward progress and milestones.
+  // { completedAt }
+  gameCompletions: '++id, completedAt',
+
+  // Species unlocked at a completion milestone (Epic 8). Keyed by scientific
+  // name so a species can never be unlocked twice; rows are never deleted.
+  // { scientificName, unlockedAt }
+  collectibles: 'scientificName, unlockedAt',
 })
 
 // Populate the starter task list on first run. Safe to call on every app start —
