@@ -68,6 +68,11 @@ const router = createRouter({
       name: 'progress',
       component: ProgressView,
     },
+    {
+      // The collection lives on the progress page now; keep old links working.
+      path: '/collection',
+      redirect: '/progress',
+    },
   ],
 })
 
