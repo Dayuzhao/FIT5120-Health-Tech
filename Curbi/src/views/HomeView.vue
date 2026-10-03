@@ -214,6 +214,10 @@ onBeforeUnmount(() => {
           <RouterLink to="/help" class="text-link">
             Find support services →
           </RouterLink>
+
+          <RouterLink to="/progress" class="text-link">
+            See my progress →
+          </RouterLink>
         </div>
       </div>
     </section>

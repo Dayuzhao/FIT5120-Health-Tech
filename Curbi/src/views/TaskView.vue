@@ -223,7 +223,6 @@ async function completeTask() {
           urgeEventId: eventId,
           taskId: currentTask.value.id,
           completedAt,
-          reliefScore: null,
         })
       },
     )

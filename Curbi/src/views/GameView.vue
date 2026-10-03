@@ -1,5 +1,6 @@
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { recordGameCompletion } from '@/services/progress'
 
 const gameStarted = ref(false)
 const gameComplete = ref(false)
@@ -54,6 +55,12 @@ const moveLeaf = () => {
   leafTimer = setTimeout(() => {
     if (tapCount.value >= targetTaps) {
       gameComplete.value = true
+
+      // A finished round counts as one pause on the progress page. A failed
+      // write must never interrupt the game, so it is only logged.
+      recordGameCompletion().catch((error) => {
+        console.error('Unable to record game completion:', error)
+      })
       return
     }
 

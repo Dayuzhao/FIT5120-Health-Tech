@@ -10,6 +10,7 @@
         <RouterLink to="/urge">Urge Support</RouterLink>
         <RouterLink to="/play">Play</RouterLink>
         <RouterLink to="/help">Find Support</RouterLink>
+        <RouterLink to="/progress">Progress</RouterLink>
       </nav>
 
     </div>
@@ -97,12 +98,18 @@
 }
 
 @media (max-width: 700px) {
+  /* Five links no longer fit beside the logo on a phone, so the links drop to
+     their own row instead of overflowing the page sideways. */
   .nav-container {
-    padding: 16px 20px;
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 12px 20px;
   }
 
   .nav-links {
-    gap: 14px;
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .nav-links a {
