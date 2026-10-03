@@ -136,13 +136,13 @@ onBeforeUnmount(() => lockScroll(false))
           <button v-if="hasMore" type="button" class="primary-button" @click="index += 1">
             Next
           </button>
-          <RouterLink v-else to="/collection" class="primary-button">See my collection</RouterLink>
+          <RouterLink v-else to="/progress" class="primary-button">See my collection</RouterLink>
         </div>
       </div>
     </dialog>
 
     <!-- After the dialog is dismissed, keep a way back to the collection. -->
-    <RouterLink v-if="closed" to="/collection" class="unlock-note">
+    <RouterLink v-if="closed" to="/progress" class="unlock-note">
       <span aria-hidden="true">🍃</span>
       {{ noteText }} · See my collection
     </RouterLink>

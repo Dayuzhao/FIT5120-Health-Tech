@@ -18,6 +18,32 @@ export function collectiblesEarned(pauses) {
   return fixed + repeating
 }
 
+// How close the user is to their next collectible: { previous, next, remaining,
+// fraction }. Used for the "3 / 5" bar, so it follows the same milestones as
+// collectiblesEarned(). `fraction` is cumulative (pauses / next): it keeps
+// growing as pauses are added and only drops when a milestone is reached and the
+// target moves further away (5 / 5 becomes 5 / 10).
+export function collectibleProgress(pauses) {
+  const last = FIRST_MILESTONES[FIRST_MILESTONES.length - 1]
+  let previous
+  let next
+
+  if (pauses < last) {
+    previous = Math.max(0, ...FIRST_MILESTONES.filter((milestone) => milestone <= pauses))
+    next = FIRST_MILESTONES.find((milestone) => milestone > pauses)
+  } else {
+    previous = last + Math.floor((pauses - last) / REPEAT_EVERY) * REPEAT_EVERY
+    next = previous + REPEAT_EVERY
+  }
+
+  return {
+    previous,
+    next,
+    remaining: next - pauses,
+    fraction: pauses / next,
+  }
+}
+
 async function countPauses() {
   const tasks = await db.taskCompletions.count()
   const games = await db.gameCompletions.count()
@@ -47,7 +73,8 @@ export async function drawOwedCollectibles() {
     // Short timeout: this runs right after a completion and must not hang it.
     species = await fetchSpecies({ timeoutMs: 3000 })
   } catch (error) {
-    console.error('Unable to draw a collectible yet:', error)
+    // Expected when offline: the collectible stays owed and is drawn later.
+    console.warn('Unable to draw a collectible yet:', error)
     return { drawn: [], pending: owedBefore }
   }
 
