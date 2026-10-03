@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import CollectibleUnlockCard from '@/components/CollectibleUnlockCard.vue'
+import CollectibleUnlockDialog from '@/components/CollectibleUnlockDialog.vue'
 import { drawOwedCollectibles } from '@/services/collectibles'
 import { recordGameCompletion } from '@/services/progress'
 
@@ -211,8 +211,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Outside .play-area: that box has a fixed height and clips overflow. -->
-      <CollectibleUnlockCard
+      <!-- Outside .play-area: after the pop-up is dismissed, a note stays here
+           and that box has a fixed height that would clip it. -->
+      <CollectibleUnlockDialog
         v-if="gameStarted && gameComplete && hasUnlock"
         class="game-unlock"
         :drawn="unlock.drawn"

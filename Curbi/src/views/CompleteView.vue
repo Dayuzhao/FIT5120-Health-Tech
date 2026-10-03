@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import CollectibleUnlockCard from '@/components/CollectibleUnlockCard.vue'
+import CollectibleUnlockDialog from '@/components/CollectibleUnlockDialog.vue'
 import { drawOwedCollectibles } from '@/services/collectibles'
 
 // A completion that reaches a milestone unlocks a collectible. This depends only
@@ -47,7 +47,7 @@ const selectFeeling = (feeling) => {
         </p>
       </div>
 
-      <CollectibleUnlockCard
+      <CollectibleUnlockDialog
         v-if="hasUnlock"
         :drawn="unlock.drawn"
         :pending="unlock.pending"
