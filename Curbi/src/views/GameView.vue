@@ -1,9 +1,15 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import CollectibleUnlockCard from '@/components/CollectibleUnlockCard.vue'
+import { drawOwedCollectibles } from '@/services/collectibles'
 import { recordGameCompletion } from '@/services/progress'
 
 const gameStarted = ref(false)
 const gameComplete = ref(false)
+
+// Collectible earned by finishing this round, if it reached a milestone.
+const unlock = ref({ drawn: [], pending: 0 })
+const hasUnlock = computed(() => unlock.value.drawn.length > 0 || unlock.value.pending > 0)
 
 const leafX = ref(62)
 const leafY = ref(55)
@@ -27,6 +33,7 @@ const setNewLeafPosition = () => {
 const startGame = () => {
   gameStarted.value = true
   gameComplete.value = false
+  unlock.value = { drawn: [], pending: 0 }
   tapCount.value = 0
   leafVisible.value = true
 
@@ -56,11 +63,17 @@ const moveLeaf = () => {
     if (tapCount.value >= targetTaps) {
       gameComplete.value = true
 
-      // A finished round counts as one pause on the progress page. A failed
-      // write must never interrupt the game, so it is only logged.
-      recordGameCompletion().catch((error) => {
-        console.error('Unable to record game completion:', error)
-      })
+      // A finished round counts as one pause on the progress page and may earn
+      // a collectible. A failure here must never interrupt the game, so it is
+      // only logged.
+      recordGameCompletion()
+        .then(drawOwedCollectibles)
+        .then((result) => {
+          unlock.value = result
+        })
+        .catch((error) => {
+          console.error('Unable to record game completion:', error)
+        })
       return
     }
 
@@ -197,6 +210,14 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
+
+      <!-- Outside .play-area: that box has a fixed height and clips overflow. -->
+      <CollectibleUnlockCard
+        v-if="gameStarted && gameComplete && hasUnlock"
+        class="game-unlock"
+        :drawn="unlock.drawn"
+        :pending="unlock.pending"
+      />
     </section>
 
     <RouterLink
@@ -250,6 +271,11 @@ onBeforeUnmount(() => {
   gap: 20px;
 
   margin-top: 30px;
+}
+
+.game-unlock {
+  max-width: 560px;
+  margin: 24px auto 0;
 }
 
 .complete-link {

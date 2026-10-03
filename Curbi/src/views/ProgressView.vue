@@ -71,6 +71,10 @@ onMounted(async () => {
         </p>
       </template>
 
+      <RouterLink v-if="!loading && !failed" to="/collection" class="collection-link">
+        View my collection →
+      </RouterLink>
+
       <p class="privacy">
         Saved on this device only. No account needed.
       </p>
@@ -216,6 +220,23 @@ h1 {
   border-top-color: #5d856a;
   border-radius: 50%;
   animation: spin 900ms linear infinite;
+}
+
+.collection-link {
+  display: inline-block;
+  margin-top: 22px;
+  color: #47765a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.collection-link:hover {
+  text-decoration: underline;
+}
+
+.collection-link:focus-visible {
+  outline: 3px solid #789982;
+  outline-offset: 4px;
 }
 
 .privacy {

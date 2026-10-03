@@ -1,5 +1,20 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import CollectibleUnlockCard from '@/components/CollectibleUnlockCard.vue'
+import { drawOwedCollectibles } from '@/services/collectibles'
+
+// A completion that reaches a milestone unlocks a collectible. This depends only
+// on the completion count, never on the check-in answer below.
+const unlock = ref({ drawn: [], pending: 0 })
+const hasUnlock = computed(() => unlock.value.drawn.length > 0 || unlock.value.pending > 0)
+
+onMounted(async () => {
+  try {
+    unlock.value = await drawOwedCollectibles()
+  } catch (error) {
+    console.error('Unable to check for a collectible:', error)
+  }
+})
 
 const selectedFeeling = ref('')
 
@@ -31,6 +46,12 @@ const selectFeeling = (feeling) => {
           practise responding differently when the urge appears.
         </p>
       </div>
+
+      <CollectibleUnlockCard
+        v-if="hasUnlock"
+        :drawn="unlock.drawn"
+        :pending="unlock.pending"
+      />
 
       <div class="feedback-section">
         <p class="feedback-label">

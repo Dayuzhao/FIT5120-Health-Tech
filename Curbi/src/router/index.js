@@ -10,6 +10,7 @@ import HelpFinderView from '../views/HelpFinderView.vue'
 import GameView from '../views/GameView.vue'
 import AtmosphereView from '../views/AtmosphereView.vue'
 import ProgressView from '../views/ProgressView.vue'
+import CollectionView from '../views/CollectionView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -67,6 +68,11 @@ const router = createRouter({
       path: '/progress',
       name: 'progress',
       component: ProgressView,
+    },
+    {
+      path: '/collection',
+      name: 'collection',
+      component: CollectionView,
     },
   ],
 })
