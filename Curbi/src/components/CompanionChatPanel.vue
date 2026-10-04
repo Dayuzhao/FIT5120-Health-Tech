@@ -1,5 +1,6 @@
 <script setup>
 import { nextTick, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import CopingSuggestionCard from './CopingSuggestionCard.vue'
 import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
 import FeatureActionCard from './FeatureActionCard.vue'
@@ -14,6 +15,15 @@ const inputMessage = ref('')
 const pendingSuggestion = ref(null)
 const isTyping = ref(false)
 const messageList = ref(null)
+const router = useRouter()
+
+const goToFeature = (route) => {
+  router.push(route)
+}
+
+const goToHelpFinder = () => {
+  router.push('/help')
+}
 
 const requestSaveSuggestion = (suggestion) => {
   pendingSuggestion.value = suggestion
@@ -134,7 +144,7 @@ setTimeout(async () => {
           'Take a short break with one of Curbi’s simple distraction games.',
         label: 'Play a game',
         icon: '🎮',
-        route: '/game',
+        route: '/play',
       },
     })
   } else if (wantsSuggestion(text)) {
@@ -221,10 +231,12 @@ setTimeout(async () => {
           :description="message.action.description"
           :label="message.action.label"
           :icon="message.action.icon"
+          @select="goToFeature(message.action.route)"
         />
 
         <SafeRedirectCard
           v-else-if="message.type === 'safe-redirect'"
+          @find-support="goToHelpFinder"
         />
         </div>
 
