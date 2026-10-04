@@ -233,7 +233,6 @@ onBeforeUnmount(() => {
     </section>
 
     <section class="privacy-note">
-      <strong>No account required.</strong>
       <p>
         Curbi is a wellbeing support tool and does not provide medical diagnosis.
         Activity history may be stored locally in this browser on this device.
