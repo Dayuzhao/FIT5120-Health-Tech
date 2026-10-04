@@ -110,7 +110,7 @@ def get_species() -> dict[str, Any]:
             rows = cursor.execute(
                 "SELECT s.scientific_name, s.common_name, s.fact, s.fact_source_url, "
                 "s.fact_license, i.image_url, i.license AS image_license, i.creator, "
-                "i.publisher, i.source_url AS image_source_url "
+                "i.publisher, i.source_url AS image_source_url, i.focus_x, i.focus_y "
                 "FROM species s "
                 "JOIN species_images i ON i.scientific_name = s.scientific_name AND i.sort_order = 1 "
                 "ORDER BY s.common_name"
@@ -132,6 +132,12 @@ def get_species() -> dict[str, Any]:
                     "creator": row["creator"],
                     "publisher": row["publisher"],
                     "sourceUrl": row["image_source_url"],
+                    # Hand-picked crop point, or null to keep the centred crop.
+                    "focus": (
+                        {"x": row["focus_x"], "y": row["focus_y"]}
+                        if row["focus_x"] is not None and row["focus_y"] is not None
+                        else None
+                    ),
                 },
             }
             for row in rows
