@@ -4,7 +4,7 @@ import PhotoCredit from '@/components/PhotoCredit.vue'
 import UnlockProgress from '@/components/UnlockProgress.vue'
 import { drawOwedCollectibles, listCollectibles } from '@/services/collectibles'
 import { getCompletionCount } from '@/services/progress'
-import { fetchSpecies, imageUrl, licenseLabel } from '@/services/species'
+import { fetchSpecies, imagePosition, imageUrl, licenseLabel } from '@/services/species'
 
 // One page for "how am I doing" and "what have I collected".
 //
@@ -220,6 +220,7 @@ onBeforeUnmount(() => {
                 v-if="!brokenImages[species.scientificName]"
                 class="tile-photo"
                 :src="imageUrl(species.image, 'small')"
+                :style="{ objectPosition: imagePosition(species.image) }"
                 :alt="species.commonName"
                 loading="lazy"
                 @error="brokenImages[species.scientificName] = true"
@@ -276,6 +277,7 @@ onBeforeUnmount(() => {
           v-if="!brokenImages[selected.scientificName]"
           class="dialog-photo"
           :src="imageUrl(selected.image, 'medium')"
+          :style="{ objectPosition: imagePosition(selected.image) }"
           :alt="selected.commonName"
           @error="brokenImages[selected.scientificName] = true"
         />

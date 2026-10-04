@@ -100,6 +100,12 @@ ALTER TABLE species_images ADD COLUMN IF NOT EXISTS creator    TEXT;
 ALTER TABLE species_images ADD COLUMN IF NOT EXISTS publisher  TEXT;
 ALTER TABLE species_images ADD COLUMN IF NOT EXISTS source_url TEXT;
 
+-- Hand-picked crop focus (percent across / down the photo) for the few photos
+-- whose animal is cut off when the app crops them to a square or 4:3 frame.
+-- NULL means "keep the default centred crop".
+ALTER TABLE species_images ADD COLUMN IF NOT EXISTS focus_x SMALLINT;
+ALTER TABLE species_images ADD COLUMN IF NOT EXISTS focus_y SMALLINT;
+
 -- Epic 6 / US6 global background-music player. Jamendo's whole catalogue is
 -- CC-licensed by platform design, so unlike `species` there is no license
 -- allow-list here — the three license_cc_* flags just drive attribution

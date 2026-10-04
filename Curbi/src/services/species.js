@@ -36,6 +36,13 @@ export function imageUrl(image, size) {
   return image.url.replace('/original.', `/${size}.`)
 }
 
+// The photos are cropped to a square tile and to 4:3 with object-fit: cover. A few
+// would lose the animal at the default centre, so those carry a hand-picked focus
+// point (percent across / down) from the database. Others stay centred.
+export function imagePosition(image) {
+  return image.focus ? `${image.focus.x}% ${image.focus.y}%` : '50% 50%'
+}
+
 // "http://creativecommons.org/licenses/by-nc/4.0/" -> "CC BY-NC 4.0"
 export function licenseLabel(url) {
   const match = /licenses\/([a-z-]+)\/(\d\.\d)/i.exec(url ?? '')

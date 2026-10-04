@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { imageUrl, licenseLabel } from '@/services/species'
+import { imagePosition, imageUrl, licenseLabel } from '@/services/species'
 
 // Pop-up shown right after a completion that earned a collectible.
 //
@@ -101,6 +101,7 @@ onBeforeUnmount(() => lockScroll(false))
               v-if="!brokenImages[species.scientificName]"
               class="photo"
               :src="imageUrl(species.image, 'medium')"
+              :style="{ objectPosition: imagePosition(species.image) }"
               :alt="species.commonName"
               @error="brokenImages[species.scientificName] = true"
             />
