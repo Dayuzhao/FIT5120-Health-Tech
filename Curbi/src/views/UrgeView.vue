@@ -127,11 +127,6 @@ async function beginTask() {
       <RouterLink to="/home" class="secondary-link">
         Not right now
       </RouterLink>
-
-      <p class="privacy-text">
-        No login or account is required. Your urge selection stays on this
-        device.
-      </p>
     </section>
   </main>
 </template>
