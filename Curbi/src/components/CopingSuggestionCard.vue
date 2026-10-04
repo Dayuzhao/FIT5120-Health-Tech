@@ -20,6 +20,8 @@ defineProps({
     default: '',
   },
 })
+
+const emit = defineEmits(['request-save'])
 </script>
 
 <template>
@@ -50,12 +52,22 @@ defineProps({
       {{ duration }}
     </div>
 
-    <button
-      type="button"
-      class="try-button"
-    >
-      Try this
-    </button>
+    <div class="suggestion-actions">
+      <button
+        type="button"
+        class="try-button"
+      >
+        Try this
+      </button>
+
+      <button
+        type="button"
+        class="save-button"
+        @click="emit('request-save')"
+      >
+        Save task
+      </button>
+    </div>
   </article>
 </template>
 
@@ -132,17 +144,19 @@ defineProps({
   font-weight: 600;
 }
 
-.try-button {
-  width: 100%;
+.suggestion-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 
   margin-top: 14px;
-  padding: 10px 14px;
+}
 
-  border: 0;
+.try-button,
+.save-button {
+  padding: 10px 12px;
+
   border-radius: 999px;
-
-  background: #47765a;
-  color: white;
 
   font-size: 13px;
   font-weight: 600;
@@ -150,7 +164,25 @@ defineProps({
   cursor: pointer;
 }
 
+.try-button {
+  border: 0;
+
+  background: #47765a;
+  color: white;
+}
+
 .try-button:hover {
   background: #3d674e;
+}
+
+.save-button {
+  border: 1px solid #bcd2c1;
+
+  background: #f8fbf8;
+  color: #47765a;
+}
+
+.save-button:hover {
+  background: #edf5ee;
 }
 </style>
