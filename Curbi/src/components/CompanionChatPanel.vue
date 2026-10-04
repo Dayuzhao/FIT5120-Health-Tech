@@ -3,6 +3,7 @@ import { nextTick, ref } from 'vue'
 import CopingSuggestionCard from './CopingSuggestionCard.vue'
 import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
 import FeatureActionCard from './FeatureActionCard.vue'
+import SafeRedirectCard from './SafeRedirectCard.vue'
 
 const emit = defineEmits([
   'close',
@@ -75,6 +76,19 @@ const wantsGame = (text) => {
   )
 }
 
+//UI testing mock trigger
+const mentionsMedicalTopic = (text) => {
+  const normalizedText = text.toLowerCase()
+
+  return (
+    normalizedText.includes('symptom') ||
+    normalizedText.includes('chest pain') ||
+    normalizedText.includes('diagnosis') ||
+    normalizedText.includes('am i sick') ||
+    normalizedText.includes('health problem')
+  )
+}
+
 const sendMessage = async () => {
   const text = inputMessage.value.trim()
 
@@ -96,7 +110,13 @@ const sendMessage = async () => {
   isTyping.value = true
 
 setTimeout(async () => {
-  if (wantsGame(text)) {
+  if (mentionsMedicalTopic(text)) {
+    messages.value.push({
+      id: messageId++,
+      type: 'safe-redirect',
+      role: 'assistant',
+    })
+  } else if (wantsGame(text)) {
     messages.value.push({
       id: messageId++,
       type: 'text',
@@ -201,6 +221,10 @@ setTimeout(async () => {
           :description="message.action.description"
           :label="message.action.label"
           :icon="message.action.icon"
+        />
+
+        <SafeRedirectCard
+          v-else-if="message.type === 'safe-redirect'"
         />
         </div>
 
