@@ -2,6 +2,7 @@
 import { nextTick, ref } from 'vue'
 import CopingSuggestionCard from './CopingSuggestionCard.vue'
 import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
+import FeatureActionCard from './FeatureActionCard.vue'
 
 const emit = defineEmits([
   'close',
@@ -64,6 +65,16 @@ const wantsSuggestion = (text) => {
   )
 }
 
+const wantsGame = (text) => {
+  const normalizedText = text.toLowerCase()
+
+  return (
+    normalizedText.includes('game') ||
+    normalizedText.includes('distraction') ||
+    normalizedText.includes('play something')
+  )
+}
+
 const sendMessage = async () => {
   const text = inputMessage.value.trim()
 
@@ -85,7 +96,28 @@ const sendMessage = async () => {
   isTyping.value = true
 
 setTimeout(async () => {
-  if (wantsSuggestion(text)) {
+  if (wantsGame(text)) {
+    messages.value.push({
+      id: messageId++,
+      type: 'text',
+      role: 'assistant',
+      text: 'A quick distraction might be a nice place to start.',
+    })
+
+    messages.value.push({
+      id: messageId++,
+      type: 'feature-action',
+      role: 'assistant',
+      action: {
+        title: 'Quick distraction',
+        description:
+          'Take a short break with one of Curbi’s simple distraction games.',
+        label: 'Play a game',
+        icon: '🎮',
+        route: '/game',
+      },
+    })
+  } else if (wantsSuggestion(text)) {
     messages.value.push({
       id: messageId++,
       type: 'text',
@@ -161,6 +193,14 @@ setTimeout(async () => {
           :duration="message.suggestion.duration"
           :category="message.suggestion.category"
           @request-save="requestSaveSuggestion(message.suggestion)"
+        />
+
+        <FeatureActionCard
+          v-else-if="message.type === 'feature-action'"
+          :title="message.action.title"
+          :description="message.action.description"
+          :label="message.action.label"
+          :icon="message.action.icon"
         />
         </div>
 
