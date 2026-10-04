@@ -3,9 +3,11 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import CollectibleUnlockDialog from '@/components/CollectibleUnlockDialog.vue'
 import { drawOwedCollectibles } from '@/services/collectibles'
 import { recordGameCompletion } from '@/services/progress'
+import NatureMatchGame from '@/components/NatureMatchGame.vue'
 
 const gameStarted = ref(false)
 const gameComplete = ref(false)
+const selectedGame = ref(null)
 
 // Collectible earned by finishing this round, if it reached a milestone.
 const unlock = ref({ drawn: [], pending: 0 })
@@ -30,14 +32,45 @@ const setNewLeafPosition = () => {
   leafY.value = randomPosition(38, 82)
 }
 
-const startGame = () => {
+const startLeafTap = () => {
+  selectedGame.value = 'leaf-tap'
+
   gameStarted.value = true
   gameComplete.value = false
-  unlock.value = { drawn: [], pending: 0 }
+
+  unlock.value = {
+    drawn: [],
+    pending: 0,
+  }
+
   tapCount.value = 0
   leafVisible.value = true
 
   setNewLeafPosition()
+}
+
+const openNatureMatch = () => {
+  selectedGame.value = 'nature-match'
+
+  gameStarted.value = false
+  gameComplete.value = false
+
+  unlock.value = {
+    drawn: [],
+    pending: 0,
+  }
+}
+
+const backToGameSelection = () => {
+  selectedGame.value = null
+
+  gameStarted.value = false
+  gameComplete.value = false
+
+  if (leafTimer) {
+    clearTimeout(leafTimer)
+    leafTimer = null
+  }
 }
 
 const playTapSound = () => {
@@ -47,6 +80,25 @@ const playTapSound = () => {
 
   tapSound.currentTime = 0
   tapSound.play().catch(() => {})
+}
+
+const handleGameCompletion = () => {
+  unlock.value = {
+    drawn: [],
+    pending: 0,
+  }
+
+  recordGameCompletion()
+    .then(drawOwedCollectibles)
+    .then((result) => {
+      unlock.value = result
+    })
+    .catch((error) => {
+      console.error(
+        'Unable to record game completion:',
+        error,
+      )
+    })
 }
 
 const moveLeaf = () => {
@@ -63,17 +115,8 @@ const moveLeaf = () => {
     if (tapCount.value >= targetTaps) {
       gameComplete.value = true
 
-      // A finished round counts as one pause on the progress page and may earn
-      // a collectible. A failure here must never interrupt the game, so it is
-      // only logged.
-      recordGameCompletion()
-        .then(drawOwedCollectibles)
-        .then((result) => {
-          unlock.value = result
-        })
-        .catch((error) => {
-          console.error('Unable to record game completion:', error)
-        })
+      handleGameCompletion()
+
       return
     }
 
@@ -83,7 +126,7 @@ const moveLeaf = () => {
 }
 
 const playAgain = () => {
-  startGame()
+  startLeafTap()
 }
 
 onMounted(() => {
@@ -117,46 +160,97 @@ onBeforeUnmount(() => {
     </section>
 
     <section class="game-area">
-      <!-- Ready -->
+      <!-- Game selection -->
       <div
-        v-if="!gameStarted"
-        class="game-card"
+        v-if="!selectedGame"
+        class="game-selection"
       >
-        <div class="game-visual">
-          <span class="leaf">🍃</span>
-        </div>
+        <!-- Leaf Tap -->
+        <article class="game-option-card">
+          <div class="game-option-visual leaf-option">
+            <span aria-hidden="true">
+              🍃
+            </span>
+          </div>
 
-        <div class="game-copy">
-          <p class="game-label">LEAF TAP</p>
+          <div class="game-option-copy">
+            <p class="game-label">
+              LEAF TAP
+            </p>
 
-          <h2>A gentle distraction game</h2>
+            <h2>
+              A gentle distraction
+            </h2>
 
-          <p>
-            Tap leaves as they appear. There is no score,
-            ranking or pressure to perform.
-          </p>
+            <p>
+              Tap leaves as they appear. There is no score,
+              ranking or pressure to perform.
+            </p>
 
-          <button
-            class="start-game-button"
-            type="button"
-            @click="startGame"
-          >
-            Start game
-          </button>
-        </div>
+            <button
+              class="start-game-button"
+              type="button"
+              @click="startLeafTap"
+            >
+              Start Leaf Tap
+            </button>
+          </div>
+        </article>
+
+        <!-- Nature Match -->
+        <article class="game-option-card">
+          <div class="game-option-visual match-option">
+            <div
+              class="match-preview"
+              aria-hidden="true"
+            >
+              <span>🌿</span>
+              <span>🌸</span>
+              <span>🍄</span>
+              <span>🍃</span>
+            </div>
+          </div>
+
+          <div class="game-option-copy">
+            <p class="game-label">
+              NATURE MATCH
+            </p>
+
+            <h2>
+              Find the matching pairs
+            </h2>
+
+            <p>
+              Turn over simple nature cards and find each pair.
+              Take your time — there is nothing to win or lose.
+            </p>
+
+            <button
+              class="start-game-button"
+              type="button"
+              @click="openNatureMatch"
+            >
+              Start Nature Match
+            </button>
+          </div>
+        </article>
       </div>
 
-      <!-- Playing / Complete -->
+      <!-- Leaf Tap -->
       <div
-        v-else
+        v-else-if="selectedGame === 'leaf-tap'"
         class="play-area"
       >
         <!-- Playing -->
         <template v-if="!gameComplete">
           <div class="play-message">
-            <p class="game-label">LEAF TAP</p>
+            <p class="game-label">
+              LEAF TAP
+            </p>
 
-            <h2>Tap the leaves when they appear.</h2>
+            <h2>
+              Tap the leaves when they appear.
+            </h2>
 
             <p>
               Take your time. There is nothing to win or lose.
@@ -183,9 +277,13 @@ onBeforeUnmount(() => {
           v-else
           class="game-complete"
         >
-          <p class="game-label">A SMALL PAUSE</p>
+          <p class="game-label">
+            A SMALL PAUSE
+          </p>
 
-          <h2>You took a moment.</h2>
+          <h2>
+            You took a moment.
+          </h2>
 
           <p>
             A few seconds of redirected attention can be enough.
@@ -211,10 +309,15 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <!-- Outside .play-area: after the pop-up is dismissed, a note stays here
-           and that box has a fixed height that would clip it. -->
+      <!-- Nature Match placeholder -->
+      <NatureMatchGame
+        v-else
+        @back="backToGameSelection"
+        @complete="handleGameCompletion"
+      />
+
       <CollectibleUnlockDialog
-        v-if="gameStarted && gameComplete && hasUnlock"
+        v-if="selectedGame && hasUnlock"
         class="game-unlock"
         :drawn="unlock.drawn"
         :pending="unlock.pending"
@@ -222,12 +325,24 @@ onBeforeUnmount(() => {
     </section>
 
     <RouterLink
-      v-if="!gameComplete"
+      v-if="!selectedGame"
       to="/"
       class="back-link"
     >
       ← Back to home
     </RouterLink>
+
+    <button
+      v-else-if="
+        selectedGame === 'leaf-tap' &&
+        !gameComplete
+      "
+      type="button"
+      class="back-link back-button"
+      @click="backToGameSelection"
+    >
+      ← Back to games
+    </button>
   </main>
 </template>
 
@@ -579,7 +694,155 @@ h1 {
     scale(0.94);
 }
 
+.game-selection {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 24px;
+}
+
+.game-option-card {
+  overflow: hidden;
+
+  border: 1px solid rgba(74, 111, 83, 0.12);
+  border-radius: 28px;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  box-shadow:
+    0 20px 48px
+    rgba(53, 78, 60, 0.07);
+}
+
+.game-option-visual {
+  min-height: 210px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(231, 241, 213, 0.95),
+      rgba(224, 237, 226, 0.65)
+    );
+}
+
+.game-option-visual > span {
+  font-size: 76px;
+}
+
+.game-option-copy {
+  padding: 34px;
+}
+
+.game-option-copy h2 {
+  margin: 0 0 14px;
+
+  color: #294433;
+
+  font-size: 25px;
+}
+
+.game-option-copy > p:not(.game-label) {
+  min-height: 82px;
+
+  margin: 0 0 24px;
+
+  color: #707c74;
+
+  line-height: 1.7;
+}
+
+.match-preview {
+  display: grid;
+  grid-template-columns: repeat(2, 64px);
+
+  gap: 10px;
+}
+
+.match-preview span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 64px;
+  height: 64px;
+
+  border: 1px solid rgba(71, 118, 90, 0.12);
+  border-radius: 16px;
+
+  background: rgba(255, 255, 255, 0.74);
+
+  font-size: 30px;
+
+  box-shadow:
+    0 8px 20px
+    rgba(53, 78, 60, 0.06);
+}
+
+.nature-placeholder {
+  min-height: 430px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px;
+
+  border: 1px solid rgba(74, 111, 83, 0.12);
+  border-radius: 30px;
+
+  background: rgba(255, 255, 255, 0.88);
+
+  text-align: center;
+
+  box-shadow:
+    0 24px 60px
+    rgba(53, 78, 60, 0.08);
+}
+
+.nature-placeholder h2 {
+  margin: 0;
+
+  color: #294433;
+
+  font-size: 32px;
+}
+
+.nature-placeholder > p:not(.game-label) {
+  max-width: 480px;
+
+  margin: 16px auto 26px;
+
+  color: #707c74;
+
+  line-height: 1.7;
+}
+
+.back-button {
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  cursor: pointer;
+
+  text-align: left;
+}
+
 @media (max-width: 760px) {
+  .game-selection {
+    grid-template-columns: 1fr;
+  }
+
+  .game-option-copy > p:not(.game-label) {
+    min-height: 0;
+  }
+
   .game-page {
     padding: 55px 22px;
   }
