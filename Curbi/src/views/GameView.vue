@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import CollectibleUnlockDialog from '@/components/CollectibleUnlockDialog.vue'
 import { drawOwedCollectibles } from '@/services/collectibles'
 import { recordGameCompletion } from '@/services/progress'
+import NatureMatchGame from '@/components/NatureMatchGame.vue'
 
 const gameStarted = ref(false)
 const gameComplete = ref(false)
@@ -299,30 +300,10 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Nature Match placeholder -->
-      <div
+      <NatureMatchGame
         v-else
-        class="nature-placeholder"
-      >
-        <p class="game-label">
-          NATURE MATCH
-        </p>
-
-        <h2>
-          Find the matching pairs.
-        </h2>
-
-        <p>
-          The Nature Match game board will be added in the next development step.
-        </p>
-
-        <button
-          class="start-game-button"
-          type="button"
-          @click="backToGameSelection"
-        >
-          Back to games
-        </button>
-      </div>
+        @back="backToGameSelection"
+      />
 
       <CollectibleUnlockDialog
         v-if="
