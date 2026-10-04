@@ -1,12 +1,38 @@
 <script setup>
 import { nextTick, ref } from 'vue'
 import CopingSuggestionCard from './CopingSuggestionCard.vue'
+import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits([
+  'close',
+  'save-suggestion',
+])
 
 const inputMessage = ref('')
+const pendingSuggestion = ref(null)
 const isTyping = ref(false)
 const messageList = ref(null)
+
+const requestSaveSuggestion = (suggestion) => {
+  pendingSuggestion.value = suggestion
+}
+
+const cancelSaveSuggestion = () => {
+  pendingSuggestion.value = null
+}
+
+const confirmSaveSuggestion = () => {
+  if (!pendingSuggestion.value) {
+    return
+  }
+
+  emit('save-suggestion', {
+    ...pendingSuggestion.value,
+    source: 'ai-suggested',
+  })
+
+  pendingSuggestion.value = null
+}
 
 const messages = ref([
   {
@@ -129,11 +155,12 @@ setTimeout(async () => {
         </div>
 
         <CopingSuggestionCard
-            v-else-if="message.type === 'suggestion'"
-            :title="message.suggestion.title"
-            :description="message.suggestion.description"
-            :duration="message.suggestion.duration"
-            :category="message.suggestion.category"
+          v-else-if="message.type === 'suggestion'"
+          :title="message.suggestion.title"
+          :description="message.suggestion.description"
+          :duration="message.suggestion.duration"
+          :category="message.suggestion.category"
+          @request-save="requestSaveSuggestion(message.suggestion)"
         />
         </div>
 
@@ -170,6 +197,12 @@ setTimeout(async () => {
         Send
       </button>
     </form>
+    <SaveSuggestionConfirm
+      v-if="pendingSuggestion"
+      :suggestion="pendingSuggestion"
+      @cancel="cancelSaveSuggestion"
+      @confirm="confirmSaveSuggestion"
+    />
   </aside>
 </template>
 
