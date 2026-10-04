@@ -82,6 +82,25 @@ const playTapSound = () => {
   tapSound.play().catch(() => {})
 }
 
+const handleGameCompletion = () => {
+  unlock.value = {
+    drawn: [],
+    pending: 0,
+  }
+
+  recordGameCompletion()
+    .then(drawOwedCollectibles)
+    .then((result) => {
+      unlock.value = result
+    })
+    .catch((error) => {
+      console.error(
+        'Unable to record game completion:',
+        error,
+      )
+    })
+}
+
 const moveLeaf = () => {
   if (!leafVisible.value || gameComplete.value) {
     return
@@ -96,17 +115,8 @@ const moveLeaf = () => {
     if (tapCount.value >= targetTaps) {
       gameComplete.value = true
 
-      // A finished round counts as one pause on the progress page and may earn
-      // a collectible. A failure here must never interrupt the game, so it is
-      // only logged.
-      recordGameCompletion()
-        .then(drawOwedCollectibles)
-        .then((result) => {
-          unlock.value = result
-        })
-        .catch((error) => {
-          console.error('Unable to record game completion:', error)
-        })
+      handleGameCompletion()
+
       return
     }
 
@@ -303,14 +313,11 @@ onBeforeUnmount(() => {
       <NatureMatchGame
         v-else
         @back="backToGameSelection"
+        @complete="handleGameCompletion"
       />
 
       <CollectibleUnlockDialog
-        v-if="
-          selectedGame === 'leaf-tap' &&
-          gameComplete &&
-          hasUnlock
-        "
+        v-if="selectedGame && hasUnlock"
         class="game-unlock"
         :drawn="unlock.drawn"
         :pending="unlock.pending"

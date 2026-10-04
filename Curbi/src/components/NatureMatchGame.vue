@@ -27,6 +27,10 @@ const matchedPairs = ref(0)
 
 const totalPairs = symbols.length
 
+const gameComplete = computed(() => {
+  return matchedPairs.value === totalPairs
+})
+
 let flipTimer = null
 let tapSound = null
 
@@ -156,81 +160,121 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="nature-match">
-    <div class="match-header">
-      <div>
-        <p class="game-label">
-          NATURE MATCH
-        </p>
+    <!-- Playing -->
+    <template v-if="!gameComplete">
+      <div class="match-header">
+        <div>
+          <p class="game-label">
+            NATURE MATCH
+          </p>
 
-        <h2>
-          Find the matching pairs.
-        </h2>
+          <h2>
+            Find the matching pairs.
+          </h2>
 
-        <p>
-          Turn over two cards at a time.
-          Take your time — there is nothing to win or lose.
+          <p>
+            Turn over two cards at a time.
+            Take your time — there is nothing to win or lose.
+          </p>
+        </div>
+
+        <p class="pair-progress">
+          {{ progressText }}
         </p>
       </div>
 
-      <p class="pair-progress">
-        {{ progressText }}
-      </p>
-    </div>
+      <div
+        class="match-grid"
+        aria-label="Nature Match cards"
+      >
+        <button
+          v-for="card in cards"
+          :key="card.id"
+          type="button"
+          class="match-card"
+          :class="{
+            'card-revealed': card.flipped || card.matched,
+            'card-matched': card.matched,
+          }"
+          :aria-label="
+            card.flipped || card.matched
+              ? `Nature card ${card.symbol}`
+              : 'Hidden nature card'
+          "
+          @click="selectCard(card)"
+        >
+          <span
+            v-if="card.flipped || card.matched"
+            class="card-symbol"
+            aria-hidden="true"
+          >
+            {{ card.symbol }}
+          </span>
 
+          <span
+            v-else
+            class="card-back"
+            aria-hidden="true"
+          >
+            ❧
+          </span>
+        </button>
+      </div>
+
+      <div class="match-actions">
+        <button
+          type="button"
+          class="secondary-button"
+          @click="emit('back')"
+        >
+          ← Back to games
+        </button>
+
+        <button
+          type="button"
+          class="secondary-button"
+          @click="resetGame"
+        >
+          Shuffle again
+        </button>
+      </div>
+    </template>
+
+    <!-- Complete -->
     <div
-      class="match-grid"
-      aria-label="Nature Match cards"
+      v-else
+      class="match-complete"
     >
-      <button
-        v-for="card in cards"
-        :key="card.id"
-        type="button"
-        class="match-card"
-        :class="{
-          'card-revealed': card.flipped || card.matched,
-          'card-matched': card.matched,
-        }"
-        :aria-label="
-          card.flipped || card.matched
-            ? `Nature card ${card.symbol}`
-            : 'Hidden nature card'
-        "
-        @click="selectCard(card)"
-      >
-        <span
-          v-if="card.flipped || card.matched"
-          class="card-symbol"
-          aria-hidden="true"
+      <p class="game-label">
+        A SMALL PAUSE
+      </p>
+
+      <h2>
+        Nice work.
+      </h2>
+
+      <p>
+        You found every pair.
+        Take a moment, and continue whenever you feel ready.
+      </p>
+
+      <div class="complete-actions">
+        <button
+          type="button"
+          class="primary-button"
+          @click="resetGame"
         >
-          {{ card.symbol }}
-        </span>
+          Play again
+        </button>
 
-        <span
-          v-else
-          class="card-back"
-          aria-hidden="true"
+        <button
+          type="button"
+          class="secondary-button"
+          @click="emit('back')"
         >
-          ❧
-        </span>
-      </button>
-    </div>
-
-    <div class="match-actions">
-      <button
-        type="button"
-        class="secondary-button"
-        @click="emit('back')"
-      >
-        ← Back to games
-      </button>
-
-      <button
-        type="button"
-        class="secondary-button"
-        @click="resetGame"
-      >
-        Shuffle again
-      </button>
+          Back to games
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -410,6 +454,71 @@ onBeforeUnmount(() => {
   background: #edf5ee;
 }
 
+.match-complete {
+  min-height: 440px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px;
+
+  text-align: center;
+}
+
+.match-complete h2 {
+  margin: 0;
+
+  color: #294433;
+
+  font-size: clamp(32px, 4vw, 46px);
+}
+
+.match-complete > p:not(.game-label) {
+  max-width: 480px;
+
+  margin: 18px auto 0;
+
+  color: #707c74;
+
+  line-height: 1.7;
+}
+
+.complete-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 16px;
+
+  margin-top: 28px;
+}
+
+.primary-button {
+  padding: 11px 22px;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: #47765a;
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #386548;
+}
+
+.primary-button:focus-visible {
+  outline: 3px solid rgba(71, 118, 90, 0.28);
+  outline-offset: 3px;
+}
+
 @media (max-width: 700px) {
   .nature-match {
     min-height: auto;
@@ -434,6 +543,16 @@ onBeforeUnmount(() => {
   }
 
   .secondary-button {
+    width: 100%;
+  }
+
+  .complete-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .primary-button,
+  .complete-actions .secondary-button {
     width: 100%;
   }
 }
