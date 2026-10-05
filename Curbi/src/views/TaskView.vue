@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, ensureSeeded } from '@/db'
+import { isTaskEligibleForUrge } from '@/services/taskSelection'
 
 const route = useRoute()
 const router = useRouter()
@@ -85,21 +86,24 @@ watch(currentTask, resetTimer)
 onUnmounted(clearTimerInterval)
 
 function chooseRandomTask(excludeId = null) {
-  const pool = tasks.value.filter((task) => task.id !== excludeId)
+  const pool = tasks.value.filter(
+    (task) => task.id !== excludeId,
+  )
 
-  // Prefer tasks tagged for the current urge category; fall back to the full
-  // pool when none match (e.g. no urge type, or that category has no matches).
-  const matching = urgeCategory.value
-    ? pool.filter((task) => task.categories?.includes(urgeCategory.value))
-    : []
-
-  const candidates = matching.length > 0 ? matching : pool
+  const candidates = urgeCategory.value
+    ? pool.filter((task) =>
+        isTaskEligibleForUrge(task, urgeCategory.value),
+      )
+    : pool
 
   if (candidates.length === 0) {
-    return tasks.value[0] ?? null
+    return null
   }
 
-  const randomIndex = Math.floor(Math.random() * candidates.length)
+  const randomIndex = Math.floor(
+    Math.random() * candidates.length,
+  )
+
   return candidates[randomIndex]
 }
 
