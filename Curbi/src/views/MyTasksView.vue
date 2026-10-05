@@ -15,6 +15,14 @@ const userTasks = computed(() =>
   ),
 )
 
+const builtInTasks = computed(() =>
+  tasks.value.filter(
+    (task) =>
+      task.source !== 'user' &&
+      task.active === true,
+  ),
+)
+
 async function loadTasks() {
   loading.value = true
   error.value = ''
@@ -30,6 +38,40 @@ async function loadTasks() {
     error.value = 'We could not load your tasks right now.'
   } finally {
     loading.value = false
+  }
+}
+
+async function duplicateTask(task) {
+  try {
+    const newId = await db.tasks.add({
+      title: task.title,
+      body: task.body,
+      categories: Array.isArray(task.categories)
+        ? [...task.categories]
+        : [],
+      durationSeconds:
+        task.durationSeconds ?? 120,
+      source: 'user',
+      active: true,
+      createdAt: Date.now(),
+    })
+
+    await loadTasks()
+
+    const copy = await db.tasks.get(newId)
+
+    if (copy) {
+      editingTask.value = copy
+      editorOpen.value = true
+    }
+  } catch (duplicateError) {
+    console.error(
+      'Unable to duplicate task:',
+      duplicateError,
+    )
+
+    error.value =
+      'We could not duplicate that task. Please try again.'
   }
 }
 
@@ -192,6 +234,34 @@ onMounted(loadTasks)
 
       
     </section>
+
+    <section class="task-section">
+  <div class="section-heading">
+    <h2>Built-in tasks</h2>
+    <span>{{ builtInTasks.length }}</span>
+  </div>
+
+  <div class="task-list">
+    <article
+      v-for="task in builtInTasks"
+      :key="task.id"
+      class="built-in-card"
+    >
+      <div>
+        <h3>{{ task.title }}</h3>
+        <p>{{ task.body }}</p>
+      </div>
+
+      <button
+        type="button"
+        class="secondary-button"
+        @click="duplicateTask(task)"
+      >
+        Duplicate
+      </button>
+    </article>
+  </div>
+</section>
 
     <TaskEditor
       v-if="editorOpen"
