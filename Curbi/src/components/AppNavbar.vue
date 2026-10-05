@@ -11,6 +11,7 @@
         <RouterLink to="/play">Play</RouterLink>
         <RouterLink to="/help">Find Support</RouterLink>
         <RouterLink to="/progress">Progress</RouterLink>
+        <RouterLink to="/my-tasks">My Tasks</RouterLink>
       </nav>
 
     </div>
