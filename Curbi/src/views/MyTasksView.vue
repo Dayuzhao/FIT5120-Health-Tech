@@ -38,30 +38,78 @@ function openCreate() {
   editorOpen.value = true
 }
 
+function openEdit(task) {
+  editingTask.value = { ...task }
+  editorOpen.value = true
+}
+
 function closeEditor() {
   editorOpen.value = false
   editingTask.value = null
 }
 
+
+
 async function saveTask(changes) {
   error.value = ''
 
   try {
-    await db.tasks.add({
-    title: changes.title,
-    body: changes.body,
-    categories: changes.categories,
-    durationSeconds: changes.durationSeconds,
-    source: 'user',
-    active: true,
-    createdAt: Date.now(),
-    })
+    if (editingTask.value) {
+      await db.tasks.update(
+        editingTask.value.id,
+        {
+          title: changes.title,
+          body: changes.body,
+          categories: changes.categories,
+          durationSeconds: changes.durationSeconds,
+          active: true,
+        },
+      )
+    } else {
+      await db.tasks.add({
+        title: changes.title,
+        body: changes.body,
+        categories: changes.categories,
+        durationSeconds: changes.durationSeconds,
+        source: 'user',
+        active: true,
+        createdAt: Date.now(),
+      })
+    }
 
-    closeEditor()
+    editorOpen.value = false
+    editingTask.value = null
+
     await loadTasks()
   } catch (saveError) {
     console.error('Unable to save task:', saveError)
     error.value = 'We could not save that task. Please try again.'
+  }
+}
+
+async function deleteTask(task) {
+  const confirmed = window.confirm(
+    `Delete "${task.title}"?`,
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    await db.tasks.update(task.id, {
+      active: false,
+    })
+
+    await loadTasks()
+  } catch (deleteError) {
+    console.error(
+      'Unable to delete task:',
+      deleteError,
+    )
+
+    error.value =
+      'We could not remove that task. Please try again.'
   }
 }
 
@@ -106,7 +154,11 @@ onMounted(loadTasks)
         <button type="button" class="primary-button" @click="openCreate">
           Add your first task
         </button>
+
+        
       </div>
+
+      
 
       <div v-else class="task-grid">
         <article
@@ -118,8 +170,27 @@ onMounted(loadTasks)
 
           <h3>{{ task.title }}</h3>
           <p>{{ task.body }}</p>
+
+          <button
+        type="button"
+        class="secondary-button"
+        @click="openEdit(task)"
+        >
+        Edit
+        </button>
+
+        <button
+        type="button"
+        class="danger-button"
+        @click="deleteTask(task)"
+        >
+        Delete
+        </button>
         </article>
+        
       </div>
+
+      
     </section>
 
     <TaskEditor
