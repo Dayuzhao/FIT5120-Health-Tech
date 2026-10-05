@@ -1,5 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue'
+import {
+  DEFAULT_TASK_DURATION_SECONDS,
+} from '@/services/taskDefaults'
 
 const props = defineProps({
   task: {
@@ -8,6 +11,7 @@ const props = defineProps({
   },
 })
 
+const durationMinutes = ref('')
 const emit = defineEmits(['save', 'cancel'])
 
 const title = ref('')
@@ -40,6 +44,14 @@ watch(
     categories.value = Array.isArray(task?.categories)
   ? [...task.categories]
   : []
+
+  if (task?.durationSeconds) {
+  durationMinutes.value = String(
+    task.durationSeconds / 60,
+  )
+} else {
+durationMinutes.value = ''
+}
   },
   { immediate: true },
 )
@@ -55,6 +67,25 @@ function toggleCategory(categoryId) {
 }
 
 function saveTask() {
+    let durationSeconds =
+  DEFAULT_TASK_DURATION_SECONDS
+
+    if (durationMinutes.value !== '') {
+    const minutes = Number(durationMinutes.value)
+
+    if (
+        !Number.isInteger(minutes) ||
+        minutes <= 0
+    ) {
+        error.value =
+        'Duration must be a whole number of minutes.'
+
+        return
+    }
+
+    durationSeconds = minutes * 60
+    }
+
   const cleanTitle = title.value.trim()
   const cleanBody = body.value.trim()
 
@@ -67,6 +98,7 @@ function saveTask() {
   title: cleanTitle,
   body: cleanBody,
   categories: [...categories.value],
+  durationSeconds,
 })
 }
 </script>
@@ -98,6 +130,24 @@ function saveTask() {
       </div>
 
       <form @submit.prevent="saveTask">
+        <label class="field">
+        <span>Suggested duration (minutes)</span>
+
+        <input
+            v-model="durationMinutes"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            placeholder="Leave blank for the default"
+        />
+
+        <small>
+            Blank uses the app default of
+            {{ DEFAULT_TASK_DURATION_SECONDS / 60 }} minutes.
+        </small>
+        </label>
+
         <label class="field">
           <span>Task name</span>
           <input
