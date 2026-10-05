@@ -51,6 +51,7 @@ async function saveTask(changes) {
     title: changes.title,
     body: changes.body,
     categories: changes.categories,
+    durationSeconds: changes.durationSeconds,
     source: 'user',
     active: true,
     createdAt: Date.now(),
