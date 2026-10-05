@@ -16,7 +16,7 @@ export const db = new Dexie('curbi')
 
 db.version(1).stores({
   // Alternative tasks offered when the user wants to redirect a checking urge.
-  // { title, body, source: 'seed' | 'user', active: boolean, createdAt: number }
+  // { title, body, source: 'seed' | 'user' | 'ai-suggested', active: boolean, createdAt: number }
   tasks: '++id, active',
 
   // One row each time the user opens the app to redirect an urge (Epic 1).

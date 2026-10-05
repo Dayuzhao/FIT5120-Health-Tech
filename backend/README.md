@@ -15,9 +15,11 @@ cp .env.example .env              # set DATABASE_URL
 uvicorn main:app --reload
 ```
 
-`DATABASE_URL` is the only configuration. Locally it points at a Docker Postgres
-(see the root `README.md`); in deployment it is the AWS RDS endpoint, passed as an
-environment variable and never committed. `.env` is git-ignored.
+`DATABASE_URL` configures the existing open-data endpoints. Epic 10 uses the
+Google Gemini API: set `GEMINI_API_KEY` in `backend/.env` and optionally set
+`GEMINI_COMPANION_MODEL` (defaults to `gemini-3.1-flash-lite`). Get a key from
+[Google AI Studio](https://aistudio.google.com/app/apikey). Keep the key on the
+backend; never put it in the frontend or commit `backend/.env`.
 
 On startup the app opens a `psycopg` connection pool and runs
 `CREATE TABLE IF NOT EXISTS` for all three tables, so a fresh database just works
@@ -46,6 +48,16 @@ produces each JSON file.
 | `GET /api/v1/services?near=lat:lon,...` | `{mode: "distance", results: [...]}` — up to 20 services ordered by haversine distance to the nearest given point |
 | `GET /api/v1/services?suburb=&postcode=` | `{mode: "exact", results: [...]}` — services whose suburb or postcode matches |
 | `GET /api/v1/species` | `{species: [{scientificName, commonName, fact: {text, sourceUrl, licenseUrl}, image: {url, licenseUrl, creator, publisher, sourceUrl}}]}` — 61 species ordered by common name (Epic 8 collectibles) |
+| `POST /api/v1/companion/chat` | One structured Epic 10 reply. Medical input is redirected before any model call and model output is checked again before it is returned. Conversations are not stored. |
+
+The chat request may include a `personality` (`gentle`, `playful`, `calm`,
+`encouraging`, or `custom`) and an optional `custom_personality` style preference
+(up to 500 characters). Persona guidance is fixed on the server; custom text may
+only affect tone and is always subordinate to the safety prompt.
+
+For chatbot-only local testing without PostgreSQL, run
+`uvicorn companion.local_app:app --reload` from `backend/`. The full API remains
+`uvicorn main:app` and requires a reachable database.
 
 `distance_km` on each service result is computed per request (it depends on the
 user's location); everything else is stored as loaded.

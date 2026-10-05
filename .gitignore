@@ -1,3 +1,6 @@
 # Project documents (Data Management Plan, risk register, testing docs, etc.)
 # are kept with the team's submission, not in this repo.
 docs/
+
+# Local backend secrets
+backend/.env

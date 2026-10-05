@@ -5,17 +5,86 @@ import CopingSuggestionCard from './CopingSuggestionCard.vue'
 import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
 import FeatureActionCard from './FeatureActionCard.vue'
 import SafeRedirectCard from './SafeRedirectCard.vue'
+import { sendCompanionMessage } from '../services/companion'
 
-const emit = defineEmits([
-  'close',
-  'save-suggestion',
-])
+const props = defineProps({
+  saveSuggestion: {
+    type: Function,
+    required: true,
+  },
+})
+
+const emit = defineEmits(['close'])
 
 const inputMessage = ref('')
+const personalities = [
+  {
+    id: 'gentle',
+    name: 'Gentle friend',
+    description: 'Warm, soft, and reassuring',
+    icon: '🌿',
+  },
+  {
+    id: 'playful',
+    name: 'Playful buddy',
+    description: 'Light-hearted and cheerful',
+    icon: '☀️',
+  },
+  {
+    id: 'calm',
+    name: 'Calm guide',
+    description: 'Steady, simple, and clear',
+    icon: '🍃',
+  },
+  {
+    id: 'encouraging',
+    name: 'Encouraging pal',
+    description: 'Positive, kind, and low-pressure',
+    icon: '✨',
+  },
+  {
+    id: 'custom',
+    name: 'Make it yours',
+    description: 'Choose a style in your own words',
+    icon: '✏️',
+  },
+]
+const savedPersonality = localStorage.getItem('curbi-companion-personality')
+const savedCustomPersonality = localStorage.getItem('curbi-companion-custom-style')
+const legacyCustomPersonality = localStorage.getItem('curbi-companion-instructions')
+const initialCustomPersonality = savedCustomPersonality ?? legacyCustomPersonality ?? ''
+if (savedCustomPersonality === null && legacyCustomPersonality !== null) {
+  localStorage.setItem('curbi-companion-custom-style', legacyCustomPersonality)
+  localStorage.removeItem('curbi-companion-instructions')
+}
+const initialPersonality = personalities.some(({ id }) => id === savedPersonality)
+  ? savedPersonality
+  : initialCustomPersonality
+    ? 'custom'
+    : 'gentle'
+const selectedPersonality = ref(initialPersonality)
+const customPersonalityDraft = ref(initialCustomPersonality)
+const activeCustomPersonality = ref(initialCustomPersonality)
+const showPersonalities = ref(false)
 const pendingSuggestion = ref(null)
 const isTyping = ref(false)
+const isSaving = ref(false)
+const saveError = ref('')
 const messageList = ref(null)
+const conversationHistory = ref([])
 const router = useRouter()
+
+const selectPersonality = (personality) => {
+  selectedPersonality.value = personality
+  localStorage.setItem('curbi-companion-personality', personality)
+}
+
+const saveCustomPersonality = () => {
+  const value = customPersonalityDraft.value.trim()
+  activeCustomPersonality.value = value
+  localStorage.setItem('curbi-companion-custom-style', value)
+  localStorage.removeItem('curbi-companion-instructions')
+}
 
 const goToFeature = (route) => {
   router.push(route)
@@ -26,6 +95,7 @@ const goToHelpFinder = () => {
 }
 
 const requestSaveSuggestion = (suggestion) => {
+  saveError.value = ''
   pendingSuggestion.value = suggestion
 }
 
@@ -33,17 +103,29 @@ const cancelSaveSuggestion = () => {
   pendingSuggestion.value = null
 }
 
-const confirmSaveSuggestion = () => {
-  if (!pendingSuggestion.value) {
+const confirmSaveSuggestion = async () => {
+  if (!pendingSuggestion.value || isSaving.value) {
     return
   }
 
-  emit('save-suggestion', {
-    ...pendingSuggestion.value,
-    source: 'ai-suggested',
-  })
+  isSaving.value = true
+  saveError.value = ''
 
-  pendingSuggestion.value = null
+  try {
+    await props.saveSuggestion(pendingSuggestion.value)
+    pendingSuggestion.value = null
+    messages.value.push({
+      id: messageId++,
+      type: 'status',
+      role: 'assistant',
+      text: 'Saved to My Tasks.',
+    })
+    await scrollToBottom()
+  } catch {
+    saveError.value = 'The task could not be saved. Please try again.'
+  } finally {
+    isSaving.value = false
+  }
 }
 
 const messages = ref([
@@ -65,38 +147,65 @@ const scrollToBottom = async () => {
   }
 }
 
-const wantsSuggestion = (text) => {
-  const normalizedText = text.toLowerCase()
-
-  return (
-    normalizedText.includes('something to do') ||
-    normalizedText.includes('suggest') ||
-    normalizedText.includes('idea') ||
-    normalizedText.includes('what can i do')
-  )
+const categoryLabels = {
+  'body-checking': 'Physical reset',
+  reassurance: 'Everyday reset',
+  'info-searching': 'Screen break',
+  general: 'General activity',
 }
 
-const wantsGame = (text) => {
-  const normalizedText = text.toLowerCase()
-
-  return (
-    normalizedText.includes('game') ||
-    normalizedText.includes('distraction') ||
-    normalizedText.includes('play something')
-  )
+const durationLabel = (seconds) => {
+  if (seconds < 60) return `${seconds} sec`
+  return `${Math.round(seconds / 60)} min`
 }
 
-//UI testing mock trigger
-const mentionsMedicalTopic = (text) => {
-  const normalizedText = text.toLowerCase()
+const appendReply = (reply) => {
+  if (reply.type === 'suggestion' || reply.type === 'save-offer') {
+    messages.value.push({
+      id: messageId++,
+      type: 'text',
+      role: 'assistant',
+      text: reply.message,
+    })
+    messages.value.push({
+      id: messageId++,
+      type: 'suggestion',
+      role: 'assistant',
+      suggestion: {
+        ...reply.suggestion,
+        description: reply.suggestion.body,
+        duration: durationLabel(reply.suggestion.durationSeconds),
+        categoryLabel: reply.suggestion.categories.length
+          ? categoryLabels[reply.suggestion.categories[0]]
+          : categoryLabels.general,
+      },
+    })
+    return
+  }
 
-  return (
-    normalizedText.includes('symptom') ||
-    normalizedText.includes('chest pain') ||
-    normalizedText.includes('diagnosis') ||
-    normalizedText.includes('am i sick') ||
-    normalizedText.includes('health problem')
-  )
+  if (reply.type === 'feature-action') {
+    messages.value.push({ id: messageId++, type: 'text', role: 'assistant', text: reply.message })
+    messages.value.push({
+      id: messageId++,
+      type: 'feature-action',
+      role: 'assistant',
+      action: reply.action,
+    })
+    return
+  }
+
+  if (reply.type === 'safe-redirect') {
+    messages.value.push({
+      id: messageId++,
+      type: 'safe-redirect',
+      role: 'assistant',
+      text: reply.message,
+      action: reply.action,
+    })
+    return
+  }
+
+  messages.value.push({ id: messageId++, type: 'text', role: 'assistant', text: reply.message })
 }
 
 const sendMessage = async () => {
@@ -119,68 +228,30 @@ const sendMessage = async () => {
 
   isTyping.value = true
 
-setTimeout(async () => {
-  if (mentionsMedicalTopic(text)) {
-    messages.value.push({
-      id: messageId++,
-      type: 'safe-redirect',
-      role: 'assistant',
+  try {
+    const reply = await sendCompanionMessage(text, conversationHistory.value, {
+      personality: selectedPersonality.value,
+      customPersonality:
+        selectedPersonality.value === 'custom' ? activeCustomPersonality.value : '',
     })
-  } else if (wantsGame(text)) {
-    messages.value.push({
-      id: messageId++,
-      type: 'text',
-      role: 'assistant',
-      text: 'A quick distraction might be a nice place to start.',
-    })
+    appendReply(reply)
 
-    messages.value.push({
-      id: messageId++,
-      type: 'feature-action',
-      role: 'assistant',
-      action: {
-        title: 'Quick distraction',
-        description:
-          'Take a short break with one of Curbi’s simple distraction games.',
-        label: 'Play a game',
-        icon: '🎮',
-        route: '/play',
-      },
+    if (!['safe-redirect', 'error'].includes(reply.type)) {
+      conversationHistory.value = [
+        ...conversationHistory.value,
+        { role: 'user', content: text },
+        { role: 'assistant', content: reply.message },
+      ].slice(-8)
+    }
+  } catch {
+    appendReply({
+      type: 'error',
+      message: 'Curbi is unavailable right now. Please try again shortly.',
     })
-  } else if (wantsSuggestion(text)) {
-    messages.value.push({
-      id: messageId++,
-      type: 'text',
-      role: 'assistant',
-      text: 'Here is one small activity you could try.',
-    })
-
-    messages.value.push({
-      id: messageId++,
-      type: 'suggestion',
-      role: 'assistant',
-      suggestion: {
-        title: 'Take a short reset',
-        description:
-          'Put your phone down and slowly walk around the room for two minutes.',
-        duration: '2 min',
-        category: 'Physical reset',
-      },
-    })
-  } else {
-    messages.value.push({
-      id: messageId++,
-      type: 'text',
-      role: 'assistant',
-      text:
-        "I'm here with you. We can find something small and manageable to do next.",
-    })
+  } finally {
+    isTyping.value = false
+    await scrollToBottom()
   }
-
-  isTyping.value = false
-
-  await scrollToBottom()
-}, 900)
 }
 </script>
 
@@ -192,28 +263,94 @@ setTimeout(async () => {
         <h2>Chat with Curbi</h2>
       </div>
 
-      <button
-        type="button"
-        class="close-button"
-        aria-label="Close chat"
-        @click="emit('close')"
-      >
+      <button type="button" class="close-button" aria-label="Close chat" @click="emit('close')">
         ×
       </button>
     </header>
 
+    <section class="personality-section">
+      <button
+        type="button"
+        class="personality-toggle"
+        :aria-expanded="showPersonalities"
+        @click="showPersonalities = !showPersonalities"
+      >
+        <span>Your companion</span>
+        <span class="personality-current">
+          {{ personalities.find(({ id }) => id === selectedPersonality)?.name }}
+        </span>
+        <span aria-hidden="true">{{ showPersonalities ? '−' : '+' }}</span>
+      </button>
+
+      <div v-if="showPersonalities" class="personality-picker">
+        <p class="personality-intro">Choose the kind of companion you would like to chat with.</p>
+        <div class="personality-options" role="group" aria-label="Companion personality">
+          <button
+            v-for="personality in personalities"
+            :key="personality.id"
+            type="button"
+            class="personality-option"
+            :class="{ selected: selectedPersonality === personality.id }"
+            :aria-pressed="selectedPersonality === personality.id"
+            @click="selectPersonality(personality.id)"
+          >
+            <span class="personality-icon" aria-hidden="true">{{ personality.icon }}</span>
+            <span class="personality-option-copy">
+              <strong>{{ personality.name }}</strong>
+              <small>{{ personality.description }}</small>
+            </span>
+            <span
+              v-if="selectedPersonality === personality.id"
+              class="personality-check"
+              aria-label="Selected"
+            >
+              ✓
+            </span>
+          </button>
+        </div>
+
+        <div v-if="selectedPersonality === 'custom'" class="custom-personality">
+          <label for="curbi-custom-personality">Describe the style you would enjoy</label>
+          <textarea
+            id="curbi-custom-personality"
+            v-model="customPersonalityDraft"
+            maxlength="500"
+            rows="3"
+            placeholder="For example: Be a cozy, gentle friend who keeps replies short."
+          ></textarea>
+          <p class="personality-safety-note">
+            Custom styles change tone only. Curbi's wellbeing safety rules always stay in place.
+          </p>
+          <button
+            type="button"
+            class="save-personality-button"
+            :disabled="customPersonalityDraft.trim() === activeCustomPersonality"
+            @click="saveCustomPersonality"
+          >
+            {{ customPersonalityDraft.trim() === activeCustomPersonality ? 'Saved' : 'Save style' }}
+          </button>
+        </div>
+        <p v-else class="personality-safety-note">
+          Every personality follows the same wellbeing safety rules.
+        </p>
+      </div>
+    </section>
+
     <div ref="messageList" class="message-list">
-        <div
+      <div
         v-for="message in messages"
         :key="message.id"
         class="message-row"
         :class="`message-${message.role}`"
-        >
+      >
         <div
-            v-if="message.type === 'text'"
-            class="message-bubble"
+          v-if="message.type === 'text' || message.type === 'status'"
+          class="message-bubble"
+          :class="{ 'status-bubble': message.type === 'status' }"
+          :role="message.type === 'status' ? 'status' : undefined"
+          :aria-live="message.type === 'status' ? 'polite' : undefined"
         >
-            {{ message.text }}
+          {{ message.text }}
         </div>
 
         <CopingSuggestionCard
@@ -221,7 +358,7 @@ setTimeout(async () => {
           :title="message.suggestion.title"
           :description="message.suggestion.description"
           :duration="message.suggestion.duration"
-          :category="message.suggestion.category"
+          :category="message.suggestion.categoryLabel"
           @request-save="requestSaveSuggestion(message.suggestion)"
         />
 
@@ -236,26 +373,23 @@ setTimeout(async () => {
 
         <SafeRedirectCard
           v-else-if="message.type === 'safe-redirect'"
+          :message="message.text"
+          :label="message.action.label"
           @find-support="goToHelpFinder"
         />
-        </div>
+      </div>
 
-        <div
-            v-if="isTyping"
-            class="message-row message-assistant"
-        >
-            <div class="message-bubble typing-bubble">
-            <span></span>
-            <span></span>
-            <span></span>
-            </div>
+      <div v-if="isTyping" class="message-row message-assistant">
+        <div class="message-bubble typing-bubble">
+          <span></span>
+          <span></span>
+          <span></span>
         </div>
+      </div>
     </div>
 
     <form class="chat-input-row" @submit.prevent="sendMessage">
-      <label for="curbi-chat-input" class="sr-only">
-        Message Curbi
-      </label>
+      <label for="curbi-chat-input" class="sr-only"> Message Curbi </label>
 
       <input
         id="curbi-chat-input"
@@ -265,17 +399,15 @@ setTimeout(async () => {
         autocomplete="off"
       />
 
-      <button
-        type="submit"
-        class="send-button"
-        :disabled="!inputMessage.trim() || isTyping"
-      >
+      <button type="submit" class="send-button" :disabled="!inputMessage.trim() || isTyping">
         Send
       </button>
     </form>
     <SaveSuggestionConfirm
       v-if="pendingSuggestion"
       :suggestion="pendingSuggestion"
+      :saving="isSaving"
+      :error="saveError"
       @cancel="cancelSaveSuggestion"
       @confirm="confirmSaveSuggestion"
     />
@@ -302,9 +434,7 @@ setTimeout(async () => {
 
   background: rgba(250, 253, 250, 0.98);
 
-  box-shadow:
-    0 24px 70px
-    rgba(41, 72, 52, 0.18);
+  box-shadow: 0 24px 70px rgba(41, 72, 52, 0.18);
 }
 
 .chat-header {
@@ -335,6 +465,155 @@ setTimeout(async () => {
 
   font-size: 20px;
   font-weight: 600;
+}
+
+.personality-section {
+  border-bottom: 1px solid #e3ece4;
+}
+
+.personality-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 0;
+  background: #f5f9f5;
+  color: #45624f;
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.personality-toggle span:first-child {
+  flex: 1;
+}
+
+.personality-current {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e1eee3;
+  color: #3d674e;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.personality-picker {
+  padding: 12px 16px;
+  background: #fbfdfb;
+}
+
+.personality-intro {
+  margin: 0 0 9px;
+  color: #536d5b;
+  font-size: 12px;
+}
+
+.personality-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.personality-option {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid #d7e4d9;
+  border-radius: 12px;
+  background: #fff;
+  color: #365640;
+  text-align: left;
+  cursor: pointer;
+}
+
+.personality-option.selected {
+  border-color: #6f9479;
+  background: #edf5ee;
+  box-shadow: 0 0 0 1px #6f9479;
+}
+
+.personality-icon {
+  flex: 0 0 auto;
+  font-size: 18px;
+}
+
+.personality-option-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personality-option-copy strong {
+  font-size: 11px;
+}
+
+.personality-option-copy small {
+  color: #718b78;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.personality-check {
+  margin-left: auto;
+  color: #47765a;
+  font-weight: 700;
+}
+
+.custom-personality {
+  margin-top: 10px;
+}
+
+.custom-personality label {
+  display: block;
+  margin-bottom: 6px;
+  color: #536d5b;
+  font-size: 12px;
+}
+
+.custom-personality textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 9px 11px;
+  border: 1px solid #cfddd2;
+  border-radius: 12px;
+  color: #294535;
+  font: inherit;
+  font-size: 13px;
+}
+
+.personality-safety-note {
+  margin: 9px 0 0;
+  color: #718b78;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.save-personality-button {
+  display: block;
+  margin: 8px 0 0 auto;
+  padding: 5px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #47765a;
+  color: white;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.save-personality-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+@media (max-width: 380px) {
+  .personality-options {
+    grid-template-columns: 1fr;
+  }
 }
 
 .close-button {
@@ -406,6 +685,12 @@ setTimeout(async () => {
   color: white;
 }
 
+.message-assistant .status-bubble {
+  border: 1px solid #bcd6c2;
+  background: #f4faf5;
+  font-weight: 650;
+}
+
 .chat-input-row {
   display: flex;
   gap: 10px;
@@ -435,9 +720,7 @@ setTimeout(async () => {
 .chat-input-row input:focus {
   border-color: #6f9479;
 
-  box-shadow:
-    0 0 0 3px
-    rgba(111, 148, 121, 0.14);
+  box-shadow: 0 0 0 3px rgba(111, 148, 121, 0.14);
 }
 
 .send-button {

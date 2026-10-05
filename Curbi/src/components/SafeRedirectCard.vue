@@ -1,39 +1,36 @@
 <script setup>
+defineProps({
+  message: {
+    type: String,
+    required: true,
+  },
+  label: {
+    type: String,
+    default: 'Open Help Finder',
+  },
+})
+
 const emit = defineEmits(['find-support'])
 </script>
 
 <template>
   <article class="redirect-card">
     <div class="redirect-heading">
-      <span
-        class="redirect-icon"
-        aria-hidden="true"
-      >
-        🌿
-      </span>
+      <span class="redirect-icon" aria-hidden="true"> 🌿 </span>
 
       <div>
-        <p class="redirect-label">
-          SUPPORT
-        </p>
+        <p class="redirect-label">SUPPORT</p>
 
-        <h3>
-          Finding the right support
-        </h3>
+        <h3>Finding the right support</h3>
       </div>
     </div>
 
     <p class="redirect-message">
-      I can’t assess symptoms or tell you what they might mean.
-      If you’d like support, I can help you find an appropriate service.
+      {{ message }}
     </p>
 
-    <button
-      type="button"
-      class="support-button"
-      @click="emit('find-support')"
-    >
-      Find support
+    <button type="button" class="support-button" @click="emit('find-support')">
+      {{ label }}
       <span aria-hidden="true">→</span>
     </button>
   </article>
@@ -52,9 +49,7 @@ const emit = defineEmits(['find-support'])
   background: #f8fbf8;
   color: #294535;
 
-  box-shadow:
-    0 8px 24px
-    rgba(57, 84, 65, 0.08);
+  box-shadow: 0 8px 24px rgba(57, 84, 65, 0.08);
 }
 
 .redirect-heading {

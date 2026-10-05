@@ -2,10 +2,13 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import CurbiCompanion from '../components/CurbiCompanion.vue'
 import CompanionChatPanel from '../components/CompanionChatPanel.vue'
+import { saveAiSuggestedTask } from '../services/tasks'
 
 const activeScene = ref('hero')
 
 const isCompanionChatOpen = ref(false)
+
+const saveCompanionSuggestion = (suggestion) => saveAiSuggestedTask(suggestion)
 
 const heroSection = ref(null)
 const journeySection = ref(null)
@@ -62,7 +65,12 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Scene 1: First impression -->
-    <section ref="heroSection" data-scene="hero" class="home-hero section-panel" :class="{ 'section-active': activeScene === 'hero' }">
+    <section
+      ref="heroSection"
+      data-scene="hero"
+      class="home-hero section-panel"
+      :class="{ 'section-active': activeScene === 'hero' }"
+    >
       <div class="hero-background hero-background-one"></div>
 
       <div class="hero-content">
@@ -78,30 +86,13 @@ onBeforeUnmount(() => {
         </p>
 
         <div class="hero-actions">
-          <RouterLink to="/urge" class="primary-button">
-            I feel the urge to check
-          </RouterLink>
+          <RouterLink to="/urge" class="primary-button"> I feel the urge to check </RouterLink>
 
-          <a href="#explore" class="secondary-button">
-            See how Curbi can help
-          </a>
+          <a href="#explore" class="secondary-button"> See how Curbi can help </a>
         </div>
 
-        <p class="hero-note">
-          No login required. Start when you are ready.
-        </p>
+        <p class="hero-note">No login required. Start when you are ready.</p>
       </div>
-
-      <div class="hero-companion">
-        <CurbiCompanion
-          @open-chat="isCompanionChatOpen = true"
-        />
-      </div>
-
-      <CompanionChatPanel
-        v-if="isCompanionChatOpen"
-        @close="isCompanionChatOpen = false"
-      />
 
       <a href="#journey" class="scroll-hint">
         <span>Scroll to explore</span>
@@ -110,15 +101,21 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- Scene 2: Explain the journey -->
-    <section id="journey" ref="journeySection" data-scene="journey" class="journey-section section-panel" :class="{ 'section-active': activeScene === 'journey' }">
+    <section
+      id="journey"
+      ref="journeySection"
+      data-scene="journey"
+      class="journey-section section-panel"
+      :class="{ 'section-active': activeScene === 'journey' }"
+    >
       <div class="journey-copy">
         <p class="eyebrow">CREATE SOME SPACE</p>
 
         <h2>You do not need to solve everything right now.</h2>
 
         <p>
-          When the urge to check appears, Curbi gives you a moment to pause
-          before deciding what happens next.
+          When the urge to check appears, Curbi gives you a moment to pause before deciding what
+          happens next.
         </p>
       </div>
 
@@ -144,15 +141,20 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- Scene 3: Main actions -->
-    <section id="explore" ref="supportSection" data-scene="support" class="support-section section-panel" :class="{ 'section-active': activeScene === 'support' }">
+    <section
+      id="explore"
+      ref="supportSection"
+      data-scene="support"
+      class="support-section section-panel"
+      :class="{ 'section-active': activeScene === 'support' }"
+    >
       <div class="section-heading">
         <p class="eyebrow">YOUR NEXT STEP</p>
 
         <h2>Choose what feels manageable right now.</h2>
 
         <p>
-          There is no single right way to pause. Choose the kind of support
-          that fits this moment.
+          There is no single right way to pause. Choose the kind of support that fits this moment.
         </p>
       </div>
 
@@ -163,9 +165,7 @@ onBeforeUnmount(() => {
           <div>
             <p class="card-label">GUIDED SUPPORT</p>
             <h3>Redirect an urge</h3>
-            <p>
-              Notice what you feel like checking and choose a different activity.
-            </p>
+            <p>Notice what you feel like checking and choose a different activity.</p>
           </div>
 
           <span class="card-link">Start urge support →</span>
@@ -179,14 +179,10 @@ onBeforeUnmount(() => {
 
             <h3>Take a playful pause</h3>
 
-            <p>
-              Shift your attention with a short, low-pressure interaction.
-            </p>
+            <p>Shift your attention with a short, low-pressure interaction.</p>
           </div>
 
-          <span class="card-link">
-            Start Leaf Tap →
-          </span>
+          <span class="card-link"> Start Leaf Tap → </span>
         </RouterLink>
 
         <RouterLink to="/atmosphere" class="support-card">
@@ -195,9 +191,7 @@ onBeforeUnmount(() => {
           <div>
             <p class="card-label">CALM BACKGROUND</p>
             <h3>Set the atmosphere</h3>
-            <p>
-              Listen to gentle background music while you move through Curbi.
-            </p>
+            <p>Listen to gentle background music while you move through Curbi.</p>
           </div>
 
           <span class="card-link">Start listening →</span>
@@ -206,39 +200,47 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- Scene 4: Final action -->
-    <section ref="closingSection" data-scene="closing" class="closing-section section-panel" :class="{ 'section-active': activeScene === 'closing' }">
+    <section
+      ref="closingSection"
+      data-scene="closing"
+      class="closing-section section-panel"
+      :class="{ 'section-active': activeScene === 'closing' }"
+    >
       <div class="closing-content">
         <p class="eyebrow">WHEN YOU ARE READY</p>
 
         <h2>What would help right now?</h2>
 
-        <p>
-          You can start with an urge, take a short break, or simply return later.
-        </p>
+        <p>You can start with an urge, take a short break, or simply return later.</p>
 
         <div class="closing-actions">
-          <RouterLink to="/urge" class="primary-button">
-            I feel the urge to check
-          </RouterLink>
+          <RouterLink to="/urge" class="primary-button"> I feel the urge to check </RouterLink>
 
-          <RouterLink to="/help" class="text-link">
-            Find support services →
-          </RouterLink>
+          <RouterLink to="/help" class="text-link"> Find support services → </RouterLink>
 
-          <RouterLink to="/progress" class="text-link">
-            See my progress →
-          </RouterLink>
+          <RouterLink to="/progress" class="text-link"> See my progress → </RouterLink>
         </div>
       </div>
     </section>
 
     <section class="privacy-note">
       <p>
-        Curbi is a wellbeing support tool and does not provide medical diagnosis.
-        Activity history may be stored locally in this browser on this device.
+        Curbi is a wellbeing support tool and does not provide medical diagnosis. Activity history
+        may be stored locally in this browser on this device.
       </p>
     </section>
 
+    <Teleport to="body">
+      <div class="hero-companion" :class="{ 'is-visible': activeScene === 'hero' }">
+        <CurbiCompanion @open-chat="isCompanionChatOpen = true" />
+      </div>
+
+      <CompanionChatPanel
+        v-if="isCompanionChatOpen"
+        :save-suggestion="saveCompanionSuggestion"
+        @close="isCompanionChatOpen = false"
+      />
+    </Teleport>
   </main>
 </template>
 
@@ -264,7 +266,18 @@ onBeforeUnmount(() => {
 
   width: clamp(140px, 12vw, 190px);
 
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
+}
+
+.hero-companion.is-visible {
   pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (max-width: 700px) {
@@ -340,14 +353,13 @@ onBeforeUnmount(() => {
   inset: 0;
   z-index: 2;
 
-  background:
-    linear-gradient(
-      90deg,
-      rgba(247, 250, 247, 0.9) 0%,
-      rgba(247, 250, 247, 0.64) 34%,
-      rgba(247, 250, 247, 0.18) 62%,
-      rgba(247, 250, 247, 0.04) 100%
-    );
+  background: linear-gradient(
+    90deg,
+    rgba(247, 250, 247, 0.9) 0%,
+    rgba(247, 250, 247, 0.64) 34%,
+    rgba(247, 250, 247, 0.18) 62%,
+    rgba(247, 250, 247, 0.04) 100%
+  );
 }
 
 /* Soft foreground atmosphere */
@@ -419,7 +431,6 @@ onBeforeUnmount(() => {
   scroll-margin-top: 90px;
 }
 
-
 /*HERO*/
 .home-hero {
   position: relative;
@@ -433,9 +444,7 @@ onBeforeUnmount(() => {
 
   gap: 70px;
 
-  padding:
-    80px
-    max(32px, calc((100vw - 1180px) / 2));
+  padding: 80px max(32px, calc((100vw - 1180px) / 2));
 
   overflow: hidden;
 
@@ -519,7 +528,6 @@ onBeforeUnmount(() => {
   gap: 16px;
 }
 
-
 /* BUTTONS */
 .primary-button {
   min-height: 48px;
@@ -550,9 +558,7 @@ onBeforeUnmount(() => {
 
   transform: translateY(-2px);
 
-  box-shadow:
-    0 12px 28px
-    rgba(54, 94, 68, 0.18);
+  box-shadow: 0 12px 28px rgba(54, 94, 68, 0.18);
 }
 
 .secondary-button,
@@ -628,14 +634,11 @@ onBeforeUnmount(() => {
   }
 }
 
-
 /* JOURNEY */
 .journey-section {
   min-height: 100vh;
 
-  padding:
-    120px
-    max(32px, calc((100vw - 1180px) / 2));
+  padding: 120px max(32px, calc((100vw - 1180px) / 2));
 
   background: rgba(238, 244, 239, 0.38);
 }
@@ -685,14 +688,11 @@ onBeforeUnmount(() => {
 
   padding: 32px;
 
-  border:
-    1px solid
-    rgba(66, 98, 76, 0.12);
+  border: 1px solid rgba(66, 98, 76, 0.12);
 
   border-radius: 24px;
 
-  background:
-    rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.72);
 
   backdrop-filter: blur(10px);
 }
@@ -726,14 +726,11 @@ onBeforeUnmount(() => {
   line-height: 1.6;
 }
 
-
 /* SUPPORT SECTION */
 .support-section {
   min-height: 100vh;
 
-  padding:
-    120px
-    max(32px, calc((100vw - 1180px) / 2));
+  padding: 120px max(32px, calc((100vw - 1180px) / 2));
 
   background: rgba(250, 251, 248, 0.4);
 }
@@ -764,8 +761,7 @@ onBeforeUnmount(() => {
   border: 1px solid #e0e8e2;
   border-radius: 28px;
 
-  background:
-    rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.88);
 
   backdrop-filter: blur(9px);
 
@@ -787,9 +783,7 @@ onBeforeUnmount(() => {
 
   transform: translateY(-8px);
 
-  box-shadow:
-    0 22px 45px
-    rgba(52, 77, 59, 0.1);
+  box-shadow: 0 22px 45px rgba(52, 77, 59, 0.1);
 }
 
 .support-card-coming {
@@ -799,8 +793,7 @@ onBeforeUnmount(() => {
 .support-card-coming:hover {
   border-color: #e0e8e2;
 
-  background:
-    rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.88);
 
   transform: none;
 
@@ -843,7 +836,6 @@ onBeforeUnmount(() => {
   font-weight: 600;
 }
 
-
 /* CLOSING */
 .closing-section {
   min-height: 76vh;
@@ -875,7 +867,6 @@ onBeforeUnmount(() => {
   margin-top: 30px;
 }
 
-
 /* PRIVACY */
 .privacy-note {
   color: #587062;
@@ -896,7 +887,6 @@ onBeforeUnmount(() => {
 
 /* SCROLL REVEAL */
 .hero-content,
-.hero-companion,
 .journey-copy,
 .journey-step,
 .section-heading,
@@ -912,7 +902,6 @@ onBeforeUnmount(() => {
 }
 
 .section-active .hero-content,
-.section-active .hero-companion,
 .section-active .journey-copy,
 .section-active .journey-step,
 .section-active .section-heading,
@@ -922,7 +911,6 @@ onBeforeUnmount(() => {
 
   transform: translateY(0);
 }
-
 
 /* Stagger the repeated items */
 .section-active .journey-step:nth-child(1),
@@ -939,7 +927,6 @@ onBeforeUnmount(() => {
 .section-active .support-card:nth-child(3) {
   transition-delay: 230ms;
 }
-
 
 /* RESPONSIVE — TABLET */
 @media (max-width: 900px) {
@@ -980,7 +967,6 @@ onBeforeUnmount(() => {
     margin-bottom: 35px;
   }
 }
-
 
 /* RESPONSIVE — MOBILE */
 @media (max-width: 600px) {
@@ -1037,16 +1023,13 @@ onBeforeUnmount(() => {
   .closing-section {
     min-height: 70vh;
 
-    padding:
-      80px
-      22px;
+    padding: 80px 22px;
   }
 
   .scroll-hint {
     bottom: 18px;
   }
 }
-
 
 /* REDUCED MOTION */
 @media (prefers-reduced-motion: reduce) {

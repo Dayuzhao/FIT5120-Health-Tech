@@ -4,59 +4,53 @@ defineProps({
     type: Object,
     required: true,
   },
+  saving: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: '',
+  },
 })
 
 const emit = defineEmits(['cancel', 'confirm'])
 </script>
 
 <template>
-  <div
-    class="save-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="save-suggestion-title"
-  >
+  <div class="save-overlay" role="dialog" aria-modal="true" aria-labelledby="save-suggestion-title">
     <div class="save-dialog">
-      <p class="save-label">
-        SAVE ACTIVITY
-      </p>
+      <p class="save-label">SAVE ACTIVITY</p>
 
-      <h3 id="save-suggestion-title">
-        Save this activity?
-      </h3>
+      <h3 id="save-suggestion-title">Save this activity?</h3>
 
       <div class="task-preview">
         <strong>{{ suggestion.title }}</strong>
 
         <p>
-          {{ suggestion.description }}
+          {{ suggestion.body || suggestion.description }}
         </p>
 
-        <span v-if="suggestion.duration">
-          {{ suggestion.duration }}
+        <span v-if="suggestion.durationSeconds || suggestion.duration">
+          {{ suggestion.duration || `${Math.round(suggestion.durationSeconds / 60)} min` }}
         </span>
       </div>
 
       <p class="save-helper">
-        This activity can be added to your personal tasks so you can
-        return to it later.
+        This activity can be added to your personal tasks so you can return to it later.
+      </p>
+
+      <p v-if="error" class="save-error" role="alert">
+        {{ error }}
       </p>
 
       <div class="save-actions">
-        <button
-          type="button"
-          class="cancel-button"
-          @click="emit('cancel')"
-        >
+        <button type="button" class="cancel-button" :disabled="saving" @click="emit('cancel')">
           Cancel
         </button>
 
-        <button
-          type="button"
-          class="confirm-button"
-          @click="emit('confirm')"
-        >
-          Save task
+        <button type="button" class="confirm-button" :disabled="saving" @click="emit('confirm')">
+          {{ saving ? 'Saving…' : 'Save task' }}
         </button>
       </div>
     </div>
@@ -91,9 +85,7 @@ const emit = defineEmits(['cancel', 'confirm'])
 
   background: #fbfdfb;
 
-  box-shadow:
-    0 22px 60px
-    rgba(38, 64, 46, 0.18);
+  box-shadow: 0 22px 60px rgba(38, 64, 46, 0.18);
 }
 
 .save-label {
@@ -156,6 +148,17 @@ const emit = defineEmits(['cancel', 'confirm'])
 
   font-size: 12px;
   line-height: 1.5;
+}
+
+.save-error {
+  margin: 10px 0 0;
+  color: #9b3b32;
+  font-size: 13px;
+}
+
+.save-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .save-actions {

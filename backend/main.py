@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg.rows import dict_row
 
 from db import connection, init_schema, pool
+from companion.router import router as companion_router
 
 SERVICE_RESULT_LIMIT = 20
 EARTH_RADIUS_KM = 6371
@@ -45,11 +46,12 @@ def service_row_to_dict(row: dict[str, Any], distance_km: float | None) -> dict[
 
 
 app = FastAPI(title="Curbi API", version="1.0.0")
+app.include_router(companion_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
