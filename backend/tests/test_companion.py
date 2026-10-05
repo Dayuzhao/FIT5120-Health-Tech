@@ -1,3 +1,4 @@
+import json
 import companion.provider as provider_module
 import pytest
 from fastapi import FastAPI
@@ -252,3 +253,43 @@ def test_gemini_provider_requires_server_api_key(monkeypatch):
         assert str(error) == "GEMINI_API_KEY is not configured"
     else:
         raise AssertionError("Expected a missing API key to fail explicitly")
+
+@pytest.mark.parametrize(
+    ("route", "icon"),
+    [("/play", "🎮"), ("/help", "🌿"), ("/atmosphere", "🎵")],
+)
+@pytest.mark.parametrize("model_icon", ["help-circle", "🌿🌿🌿🌿🌿🌿🌿🌿🌿", None])
+def test_server_sets_the_action_icon_whatever_the_model_returns(monkeypatch, route, icon, model_icon):
+    # Regression: Gemini returned icon="help-circle" (over the 8-character limit), the reply
+    # failed validation, and a user who needed the Help Finder saw "unavailable".
+    action = {"title": "Help Finder", "description": "Find support services.", "label": "Open", "route": route}
+    if model_icon is not None:
+        action["icon"] = model_icon
+    reply = {"type": "feature-action", "message": "I am here to support you.", "suggestion": None, "action": action}
+
+    class FakeModels:
+        def generate_content(self, **kwargs):
+            class Response:
+                text = json.dumps(reply)
+
+            return Response()
+
+    class FakeClient:
+        def __init__(self, api_key):
+            self.models = FakeModels()
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    monkeypatch.setattr(provider_module.genai, "Client", FakeClient)
+
+    result = GeminiCompanionProvider().generate("I need support", [])
+
+    assert result.type == "feature-action"
+    assert result.action.icon == icon
+    assert result.action.route == route
+
+
+def test_model_is_not_asked_for_an_icon():
+    action_schema = GEMINI_RESPONSE_SCHEMA.properties["action"]
+
+    assert "icon" not in action_schema.properties
+    assert "icon" not in action_schema.required
