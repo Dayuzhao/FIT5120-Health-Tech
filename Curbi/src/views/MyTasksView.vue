@@ -48,11 +48,12 @@ async function saveTask(changes) {
 
   try {
     await db.tasks.add({
-      title: changes.title,
-      body: changes.body,
-      source: 'user',
-      active: true,
-      createdAt: Date.now(),
+    title: changes.title,
+    body: changes.body,
+    categories: changes.categories,
+    source: 'user',
+    active: true,
+    createdAt: Date.now(),
     })
 
     closeEditor()

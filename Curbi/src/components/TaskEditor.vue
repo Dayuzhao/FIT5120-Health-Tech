@@ -14,15 +14,45 @@ const title = ref('')
 const body = ref('')
 const error = ref('')
 
+const TASK_URGE_TYPES = [
+  {
+    id: 'body-checking',
+    label: 'Body checking',
+  },
+  {
+    id: 'reassurance',
+    label: 'Reassurance',
+  },
+  {
+    id: 'info-searching',
+    label: 'Information searching',
+  },
+]
+
+const categories = ref([])
+
 watch(
   () => props.task,
   (task) => {
     title.value = task?.title ?? ''
     body.value = task?.body ?? ''
     error.value = ''
+    categories.value = Array.isArray(task?.categories)
+  ? [...task.categories]
+  : []
   },
   { immediate: true },
 )
+
+function toggleCategory(categoryId) {
+  if (categories.value.includes(categoryId)) {
+    categories.value = categories.value.filter(
+      (id) => id !== categoryId,
+    )
+  } else {
+    categories.value = [...categories.value, categoryId]
+  }
+}
 
 function saveTask() {
   const cleanTitle = title.value.trim()
@@ -34,9 +64,10 @@ function saveTask() {
   }
 
   emit('save', {
-    title: cleanTitle,
-    body: cleanBody,
-  })
+  title: cleanTitle,
+  body: cleanBody,
+  categories: [...categories.value],
+})
 }
 </script>
 
@@ -85,6 +116,28 @@ function saveTask() {
             placeholder="Describe what you want to do..."
           ></textarea>
         </label>
+
+        <fieldset class="field-group">
+        <legend>Urge types</legend>
+
+        <p class="field-help">
+            Select the urges this task is a good fit for.
+        </p>
+
+        <label
+            v-for="urgeType in TASK_URGE_TYPES"
+            :key="urgeType.id"
+            class="checkbox-row"
+        >
+            <input
+            type="checkbox"
+            :checked="categories.includes(urgeType.id)"
+            @change="toggleCategory(urgeType.id)"
+            />
+
+            <span>{{ urgeType.label }}</span>
+        </label>
+        </fieldset>
 
         <p v-if="error" class="error-text" role="alert">
           {{ error }}
@@ -216,5 +269,35 @@ h2 {
   border: 1px solid #ccd8cf;
   background: white;
   color: #496451;
+}
+
+.field-group {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+}
+
+.field-group legend {
+  color: #314c3a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.field-help {
+  margin: 0;
+  color: #758078;
+  font-size: 13px;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4c6253;
+}
+
+.checkbox-row input {
+  width: 17px;
+  height: 17px;
 }
 </style>
