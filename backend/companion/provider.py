@@ -46,6 +46,12 @@ Always return the required structured object. Use null for suggestion/action whe
 not apply. Do not produce a safe-redirect yourself; application safety handles that.
 """
 
+# The icon is chosen by the server, not the model. FeatureAction.icon must be a short emoji
+# (max 8 characters), and when the model was left to pick one it often returned an icon
+# name such as "help-circle". That failed validation, so a reply pointing the user to the
+# Help Finder was thrown away and the user saw "Curbi is unavailable right now".
+ROUTE_ICONS = {"/play": "🎮", "/help": "🌿", "/atmosphere": "🎵"}
+
 PERSONALITY_GUIDANCE = {
     "gentle": (
         "Be a gentle, warm companion. Use soft, reassuring language without assuming how the "
@@ -98,14 +104,13 @@ GEMINI_RESPONSE_SCHEMA = types.Schema(
                 "title": types.Schema(type=types.Type.STRING),
                 "description": types.Schema(type=types.Type.STRING),
                 "label": types.Schema(type=types.Type.STRING),
-                "icon": types.Schema(type=types.Type.STRING),
                 "route": types.Schema(
                     type=types.Type.STRING,
                     enum=["/play", "/help", "/atmosphere"],
                 ),
             },
-            required=["title", "description", "label", "icon", "route"],
-            propertyOrdering=["title", "description", "label", "icon", "route"],
+            required=["title", "description", "label", "route"],
+            propertyOrdering=["title", "description", "label", "route"],
         ),
     },
     required=["type", "message", "suggestion", "action"],
@@ -161,7 +166,11 @@ class GeminiCompanionProvider:
         )
         if not response.text:
             raise RuntimeError("The model returned no text")
-        return ModelReply.model_validate(json.loads(response.text))
+        data = json.loads(response.text)
+        action = data.get("action")
+        if isinstance(action, dict):
+            action["icon"] = ROUTE_ICONS.get(action.get("route"), "🌿")
+        return ModelReply.model_validate(data)
 
     @staticmethod
     def _system_instruction(personality: str, custom_personality: str) -> str:
