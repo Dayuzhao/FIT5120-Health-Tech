@@ -8,6 +8,7 @@ const loading = ref(true)
 const error = ref('')
 const editorOpen = ref(false)
 const editingTask = ref(null)
+const showBuiltInTasks = ref(false)
 
 const userTasks = computed(() =>
   tasks.value.filter(
@@ -236,12 +237,30 @@ onMounted(loadTasks)
     </section>
 
     <section class="task-section">
-  <div class="section-heading">
+  <div class="built-in-tasks-heading">
+  <div>
     <h2>Built-in tasks</h2>
-    <span>{{ builtInTasks.length }}</span>
+
+    <p class="built-in-tasks-count">
+      {{ builtInTasks.length }} tasks available to duplicate.
+    </p>
   </div>
 
-  <div class="task-list">
+  <button
+    type="button"
+    class="built-in-tasks-toggle"
+    :aria-expanded="showBuiltInTasks"
+    aria-controls="built-in-task-list"
+    @click="showBuiltInTasks = !showBuiltInTasks"
+  >
+    {{ showBuiltInTasks ? 'Hide tasks' : 'Show tasks' }}
+  </button>
+</div>
+
+  <div class="built-in-task-list"
+  id="built-in-task-list"
+  v-show="showBuiltInTasks"
+  >
     <article
       v-for="task in builtInTasks"
       :key="task.id"
@@ -301,6 +320,65 @@ h1 {
   color: #20392a;
   font-size: clamp(34px, 5vw, 52px);
   line-height: 1.12;
+}
+
+.built-in-tasks-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.built-in-tasks-count {
+  margin: 6px 0 0;
+  color: #68736c;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.built-in-tasks-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 16px;
+  border: 1px solid #c9d8cd;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #416f50;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.built-in-tasks-toggle:hover {
+  border-color: #9fb9a7;
+  background: #f3f7f4;
+}
+
+.built-in-tasks-toggle:focus-visible {
+  outline: 3px solid #8db69a;
+  outline-offset: 3px;
+}
+
+.built-in-task-list {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .built-in-tasks-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .built-in-tasks-toggle {
+    width: 100%;
+  }
 }
 
 .intro {
