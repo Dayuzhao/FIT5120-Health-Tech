@@ -40,8 +40,9 @@ db.version(2).stores({
   // `null` deletes the Epic 7 table.
   taskScores: null,
 
-  // One row per finished round of Leaf Tap (Epic 8). A task completion and a
-  // game completion both count as one "pause" toward progress and milestones.
+  // One row per finished round of a quick game, Leaf Tap or Nature Match
+  // (Epic 8). A task completion and a game completion both count as one
+  // "pause" toward progress and milestones.
   // { completedAt }
   gameCompletions: '++id, completedAt',
 

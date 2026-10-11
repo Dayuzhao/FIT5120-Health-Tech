@@ -160,19 +160,20 @@ onBeforeUnmount(() => {
             </div>
 
             <p class="note">
-              Finished tasks and finished rounds of Leaf Tap both count.
+              Finished tasks and finished rounds of either quick game
+              (Leaf Tap or Nature Match) both count.
             </p>
           </template>
 
           <template v-else>
             <p class="intro">
               There is nothing to chase here. Finish one short task, or one
-              round of Leaf Tap, and it will show up on this page.
+              round of a quick game, and it will show up on this page.
             </p>
 
             <div class="actions">
               <RouterLink to="/urge" class="primary-button">Try a short task</RouterLink>
-              <RouterLink to="/play" class="secondary-button">Play Leaf Tap</RouterLink>
+              <RouterLink to="/play" class="secondary-button">Play a quick game</RouterLink>
             </div>
           </template>
         </article>
