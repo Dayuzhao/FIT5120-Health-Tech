@@ -182,7 +182,7 @@ onBeforeUnmount(() => {
             <p>Shift your attention with a short, low-pressure interaction.</p>
           </div>
 
-          <span class="card-link"> Start Leaf Tap → </span>
+          <span class="card-link"> Choose a quick game →</span>
         </RouterLink>
 
         <RouterLink to="/atmosphere" class="support-card">

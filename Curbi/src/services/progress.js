@@ -4,7 +4,8 @@
 
 import { db } from '@/db'
 
-// A finished task and a finished round of Leaf Tap each count as one "pause".
+// A finished task and a finished round of a quick game (Leaf Tap or Nature
+// Match) each count as one "pause".
 // The same total drives the progress page and, later, the milestone unlocks.
 export async function getCompletionCount() {
   const [tasks, games] = await Promise.all([
