@@ -2,12 +2,16 @@
 import { computed, onMounted, ref } from 'vue'
 import { db, ensureSeeded } from '@/db'
 import TaskEditor from '@/components/TaskEditor.vue'
+import { takeTaskDraft } from '@/services/taskDraft'
 
 const tasks = ref([])
 const loading = ref(true)
 const error = ref('')
 const editorOpen = ref(false)
 const editingTask = ref(null)
+// AI-suggested task awaiting confirmation. Separate from editingTask so that
+// saving adds a new row instead of updating a record that does not exist yet.
+const draftTask = ref(null)
 const showBuiltInTasks = ref(false)
 
 const userTasks = computed(() =>
@@ -89,6 +93,7 @@ function openEdit(task) {
 function closeEditor() {
   editorOpen.value = false
   editingTask.value = null
+  draftTask.value = null
 }
 
 
@@ -122,6 +127,7 @@ async function saveTask(changes) {
 
     editorOpen.value = false
     editingTask.value = null
+    draftTask.value = null
 
     await loadTasks()
   } catch (saveError) {
@@ -156,7 +162,16 @@ async function deleteTask(task) {
   }
 }
 
-onMounted(loadTasks)
+onMounted(async () => {
+  await loadTasks()
+
+  const draft = takeTaskDraft()
+
+  if (draft) {
+    draftTask.value = draft
+    editorOpen.value = true
+  }
+})
 </script>
 
 <template>
@@ -284,7 +299,7 @@ onMounted(loadTasks)
 
     <TaskEditor
       v-if="editorOpen"
-      :task="editingTask"
+      :task="editingTask ?? draftTask"
       @save="saveTask"
       @cancel="closeEditor"
     />

@@ -21,7 +21,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['request-save'])
+const emit = defineEmits(['request-save', 'request-try'])
 </script>
 
 <template>
@@ -56,6 +56,7 @@ const emit = defineEmits(['request-save'])
       <button
         type="button"
         class="try-button"
+        @click="emit('request-try')"
       >
         Try this
       </button>

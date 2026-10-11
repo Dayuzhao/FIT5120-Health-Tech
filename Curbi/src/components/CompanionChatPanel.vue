@@ -6,6 +6,7 @@ import SaveSuggestionConfirm from './SaveSuggestionConfirm.vue'
 import FeatureActionCard from './FeatureActionCard.vue'
 import SafeRedirectCard from './SafeRedirectCard.vue'
 import { sendCompanionMessage } from '../services/companion'
+import { setTaskDraft } from '../services/taskDraft'
 
 const props = defineProps({
   saveSuggestion: {
@@ -97,6 +98,14 @@ const goToHelpFinder = () => {
 const requestSaveSuggestion = (suggestion) => {
   saveError.value = ''
   pendingSuggestion.value = suggestion
+}
+
+// Hand the suggestion to My Tasks as an unsaved draft; the user confirms there.
+// Close the floating panel so it does not cover the editor.
+const trySuggestion = (suggestion) => {
+  setTaskDraft(suggestion)
+  emit('close')
+  router.push('/my-tasks')
 }
 
 const cancelSaveSuggestion = () => {
@@ -360,6 +369,7 @@ const sendMessage = async () => {
           :duration="message.suggestion.duration"
           :category="message.suggestion.categoryLabel"
           @request-save="requestSaveSuggestion(message.suggestion)"
+          @request-try="trySuggestion(message.suggestion)"
         />
 
         <FeatureActionCard
