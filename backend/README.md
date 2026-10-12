@@ -48,7 +48,7 @@ produces each JSON file.
 | `GET /api/v1/services?near=lat:lon,...` | `{mode: "distance", results: [...]}` — up to 20 services ordered by haversine distance to the nearest given point |
 | `GET /api/v1/services?suburb=&postcode=` | `{mode: "exact", results: [...]}` — services whose suburb or postcode matches |
 | `GET /api/v1/species` | `{species: [{scientificName, commonName, fact: {text, sourceUrl, licenseUrl}, image: {url, licenseUrl, creator, publisher, sourceUrl}}]}` — 61 species ordered by common name (Epic 8 collectibles) |
-| `POST /api/v1/companion/chat` | One structured Epic 10 reply. Medical input is redirected before any model call and model output is checked again before it is returned. Conversations are not stored. |
+| `POST /api/v1/companion/chat` | One structured Epic 10 reply. Medical input is redirected before any model call and model output is checked again before it is returned. Urgent-risk redirects include Triple Zero (000), and self-harm or suicide redirects also include Lifeline (13 11 14). Conversations are not stored. |
 
 The chat request may include a `personality` (`gentle`, `playful`, `calm`,
 `encouraging`, or `custom`) and an optional `custom_personality` style preference

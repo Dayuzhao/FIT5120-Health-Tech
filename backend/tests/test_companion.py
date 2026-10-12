@@ -10,7 +10,13 @@ from companion.provider import (
     SYSTEM_PROMPT,
     GeminiCompanionProvider,
 )
-from companion.safety import SAFE_REDIRECT_MESSAGE, output_is_safe, touches_medical_topic
+from companion.safety import (
+    CRISIS_REDIRECT_MESSAGE,
+    EMERGENCY_REDIRECT_MESSAGE,
+    SAFE_REDIRECT_MESSAGE,
+    output_is_safe,
+    touches_medical_topic,
+)
 from companion.schemas import ChatHistoryItem, ChatRequest, ModelReply, Suggestion
 from companion.local_app import app as standalone_app
 from companion.router import router
@@ -35,12 +41,48 @@ def message_reply(text: str) -> ModelReply:
 
 def test_medical_input_is_not_sent_to_model():
     provider = RecordingProvider(message_reply("This must not be returned."))
-    response = chat(ChatRequest(message="Can you diagnose this chest pain?"), provider)
+    response = chat(ChatRequest(message="Can you diagnose this headache?"), provider)
 
     assert provider.calls == 0
     assert response.type == "safe-redirect"
     assert response.message == SAFE_REDIRECT_MESSAGE
     assert response.action.route == "/help"
+
+
+def test_suicidal_input_includes_emergency_and_crisis_contacts():
+    provider = RecordingProvider(message_reply("This must not be returned."))
+    response = chat(ChatRequest(message="I want to kill myself."), provider)
+
+    assert provider.calls == 0
+    assert response.type == "safe-redirect"
+    assert response.message == CRISIS_REDIRECT_MESSAGE
+    assert "000" in response.message
+    assert "Lifeline on 13 11 14" in response.message
+
+
+@pytest.mark.parametrize(
+    "message",
+    ["i wanna kms", "i wanna slit my wrists"],
+)
+def test_suicide_slang_and_self_injury_phrases_get_crisis_contacts(message):
+    provider = RecordingProvider(message_reply("This must not be returned."))
+    response = chat(ChatRequest(message=message), provider)
+
+    assert provider.calls == 0
+    assert response.type == "safe-redirect"
+    assert response.message == CRISIS_REDIRECT_MESSAGE
+    assert "000" in response.message
+    assert "Lifeline on 13 11 14" in response.message
+
+
+def test_life_threatening_symptom_includes_emergency_number():
+    provider = RecordingProvider(message_reply("This must not be returned."))
+    response = chat(ChatRequest(message="I'm having difficulty breathing."), provider)
+
+    assert provider.calls == 0
+    assert response.type == "safe-redirect"
+    assert response.message == EMERGENCY_REDIRECT_MESSAGE
+    assert "000" in response.message
 
 
 def test_medical_history_is_not_sent_to_model():
