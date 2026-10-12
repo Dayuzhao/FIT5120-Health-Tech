@@ -1,7 +1,38 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
 import AppNavbar from './components/AppNavbar.vue'
 import MusicPlayer from './components/MusicPlayer.vue'
+import { useMusicPlayer } from '@/composables/useMusicPlayer'
+
+const route = useRoute()
+const { setAudioScene, modulateClick, modulateTyping } = useMusicPlayer()
+
+function handleClick() {
+  modulateClick()
+}
+
+function handleInput(event) {
+  if (event.target.matches('input:not([type="range"]), textarea')) modulateTyping()
+}
+
+watch(
+  () => route.name,
+  (name) => {
+    setAudioScene(name === 'play' ? 'game' : name === 'urge' ? 'urge' : 'default')
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
+  document.addEventListener('click', handleClick, true)
+  document.addEventListener('input', handleInput, true)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClick, true)
+  document.removeEventListener('input', handleInput, true)
+})
 </script>
 
 <template>
@@ -63,10 +94,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family:
-    'Nunito',
-    system-ui,
-    sans-serif;
+  font-family: 'Nunito', system-ui, sans-serif;
 
   color: #20392a;
 

@@ -16,12 +16,104 @@ const bag = ref([]) // shuffle mode: indices (into pool) not yet played this rou
 const history = ref([]) // indices (into pool) played so far, for shuffle-mode "previous"
 const isPlaying = ref(false)
 const muted = ref(false)
+const volume = ref(1)
 const loading = ref(false)
 const failed = ref(false)
 const audioEl = ref(null) // the single <audio> element, assigned by MusicPlayer.vue
+let audioContext = null
+let lowPassFilter = null
+let lowShelfFilter = null
+let highShelfFilter = null
+let outputGain = null
+let interactionTimer = null
+let typingTimer = null
+let activeScene = 'default'
+
+const sceneSettings = {
+  default: { lowPass: 20000, lowShelf: 0, highShelf: 0, gain: 1 },
+  game: { lowPass: 20000, lowShelf: 0, highShelf: 0, gain: 1.06 },
+  urge: { lowPass: 20000, lowShelf: 0, highShelf: -3, gain: 1 },
+}
+
+function setAudioParam(param, value) {
+  if (!param || !audioContext) return
+  const now = audioContext.currentTime
+  param.cancelScheduledValues(now)
+  param.setTargetAtTime(value, now, 0.08)
+}
+
+function applyScene() {
+  const settings = sceneSettings[activeScene] ?? sceneSettings.default
+  setAudioParam(lowPassFilter?.frequency, settings.lowPass)
+  setAudioParam(lowShelfFilter?.gain, settings.lowShelf)
+  setAudioParam(highShelfFilter?.gain, settings.highShelf)
+  setAudioParam(outputGain?.gain, settings.gain)
+}
+
+function initializeAudioEffects() {
+  if (!audioEl.value || audioContext || typeof window === 'undefined') return
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext
+  if (!AudioContextClass) return
+
+  audioContext = new AudioContextClass()
+  const source = audioContext.createMediaElementSource(audioEl.value)
+  lowPassFilter = audioContext.createBiquadFilter()
+  lowPassFilter.type = 'lowpass'
+  lowPassFilter.frequency.value = 20000
+  lowShelfFilter = audioContext.createBiquadFilter()
+  lowShelfFilter.type = 'lowshelf'
+  lowShelfFilter.frequency.value = 180
+  highShelfFilter = audioContext.createBiquadFilter()
+  highShelfFilter.type = 'highshelf'
+  highShelfFilter.frequency.value = 3500
+  outputGain = audioContext.createGain()
+
+  source
+    .connect(lowPassFilter)
+    .connect(lowShelfFilter)
+    .connect(highShelfFilter)
+    .connect(outputGain)
+    .connect(audioContext.destination)
+  audioEl.value.volume = volume.value
+  applyScene()
+}
+
+function setAudioScene(scene) {
+  activeScene = scene
+  clearTimeout(interactionTimer)
+  clearTimeout(typingTimer)
+  applyScene()
+}
+
+function modulateClick() {
+  if (!lowPassFilter) return
+  clearTimeout(interactionTimer)
+  setAudioParam(lowPassFilter.frequency, 1900)
+  interactionTimer = setTimeout(() => {
+    const settings = sceneSettings[activeScene] ?? sceneSettings.default
+    setAudioParam(lowPassFilter.frequency, settings.lowPass)
+  }, 650)
+}
+
+function modulateTyping() {
+  if (!lowShelfFilter) return
+  clearTimeout(typingTimer)
+  setAudioParam(lowShelfFilter.gain, -2.5)
+  typingTimer = setTimeout(() => {
+    const settings = sceneSettings[activeScene] ?? sceneSettings.default
+    setAudioParam(lowShelfFilter.gain, settings.lowShelf)
+  }, 350)
+}
+
+function setVolume(value) {
+  volume.value = Number(value)
+  if (audioEl.value) audioEl.value.volume = volume.value
+}
 
 const pool = computed(() =>
-  activeCategory.value ? tracks.value.filter((t) => t.matchedTag === activeCategory.value) : tracks.value,
+  activeCategory.value
+    ? tracks.value.filter((t) => t.matchedTag === activeCategory.value)
+    : tracks.value,
 )
 const currentTrack = computed(() => pool.value[currentIndex.value] ?? null)
 
@@ -55,6 +147,12 @@ async function loadTracks() {
 
 function play() {
   isPlaying.value = true
+  initializeAudioEffects()
+  if (audioContext?.state === 'suspended') {
+    audioContext.resume().catch((error) => {
+      console.error('Unable to resume music audio effects:', error)
+    })
+  }
   audioEl.value?.play().catch(() => {
     isPlaying.value = false
   })
@@ -131,9 +229,15 @@ export function useMusicPlayer() {
     shuffleOn,
     isPlaying,
     muted,
+    volume,
     loading,
     failed,
     audioEl,
+    initializeAudioEffects,
+    setAudioScene,
+    modulateClick,
+    modulateTyping,
+    setVolume,
     loadTracks,
     play,
     pause,
