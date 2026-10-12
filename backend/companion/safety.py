@@ -29,7 +29,7 @@ MEDICAL_PATTERNS = tuple(
     for pattern in (
         r"\b(symptom|symptoms|diagnos(?:e|ed|is|ing)|disease|disorder|syndrome)\b",
         r"\b(medical|doctor|gp|hospital|emergency|ambulance|treatment|therapy|therapist)\b",
-        r"\b(medicine|medication|prescription|dose|dosage|side[ -]?effect)\b",
+        r"\b(medicine|medication|prescription|dose|dosage|pill|pills|side[ -]?effect)\b",
         r"\b(chest pain|shortness of breath|difficulty breathing|heart attack|stroke|seizure)\b",
         r"\b(painful|pain|ache|fever|rash|bleeding|dizzy|dizziness|nausea|vomit(?:ing)?)\b",
         r"\b(headache|migraine|cough|sore throat|lump|swelling|numb(?:ness)?|tingling|palpitations?)\b",
