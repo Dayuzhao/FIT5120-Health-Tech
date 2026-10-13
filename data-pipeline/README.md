@@ -15,15 +15,15 @@ loaders upsert, so re-running them adds/updates rows without a wipe).
 |---|---|---|---|
 | `npm run build:nhsd` → `output/nhsd-services.json` | `python ../backend/build_nhsd_db.py` → `services` table | Epic 2 / US2 | when a new NHSD snapshot ships |
 | `npm run build:postcodes` → `output/vic-postcodes.json` | `python ../backend/build_postcodes_db.py` → `postcodes` table | Epic 2 / US2 | rarely (postcodes barely move) |
-| `npm run build:gbif` → `output/species.json` | `python ../backend/build_species_db.py` → `species` + `species_images` tables | Epic 8 / US8 | rarely (fixed species list, human-picked images; re-run to refresh names/status) |
+| `npm run build:gbif` → `output/species.json` (reads the reviewed `curated/species-facts.json`; draft it with `npm run draft:facts`) | `python ../backend/build_species_db.py` → `species` + `species_images` tables | Epic 8 / US8 | rarely (fixed species list, human-picked images and facts; re-run to refresh names/status) |
 | `npm run build:jamendo` → `output/tracks.json` | `python ../backend/build_tracks_db.py` → `tracks` table | Epic 6 / US6 | occasionally (re-run to pick up newer popular tracks) |
 
 Every data endpoint is now a pure database read: `GET /api/v1/services` queries
 the `services` table and `GET /api/v1/geocode` the `postcodes` table. Nothing
 fetches or parses a source at request time — the old `postcodeapi.com.au` call
 and the runtime fetch of the Australian Postcodes file are both gone.
-`GET /api/v1/tracks` (Epic 6) reads its table the same way. `GET /api/v1/species`
-(Epic 8) will too, once the backend owner adds that endpoint.
+`GET /api/v1/tracks` (Epic 6) and `GET /api/v1/species` (Epic 8) read their tables the same
+way.
 
 ## NHSD — nearby mental health services (Epic 2 / US2)
 
@@ -244,9 +244,49 @@ endpoint, so every call here runs one at a time with a short delay between):
    If a new species needs picks, generate its candidate pool the same way this review did (see
    "Picking images for a new species" under Run) rather than trusting `pickImages()`'s output
    unreviewed — it's a reasonable starting filter, not a quality guarantee.
-5. `GET /v1/occurrence/search?...&limit=0` — total AU occurrence count, stored as
+5. `GET /v1/occurrence/{key}` for each picked image — the **photographer credit** (`creator`),
+   `publisher` and a link to the original record (`sourceUrl`: the iNaturalist observation page
+   from the occurrence's `references`, or the GBIF occurrence page when there is none — ALA
+   records have no `references`). The media item is matched on its exact `identifier`; a missing
+   match or a missing creator fails the run, because every allowed license except CC0 requires
+   attribution wherever the photo is shown (US8.6). Occurrences shared by several picked images
+   are fetched once.
+6. `GET /v1/occurrence/search?...&limit=0` — total AU occurrence count, stored as
    `observationCount`: a rarity signal from real data the app can surface later. **Not** used to
    define any unlock rule — those stay tied to objective task-completion counts only.
+7. **The fact** is read from `curated/species-facts.json` (see "Species facts" below). A species
+   without a reviewed fact fails the run.
+
+### Species facts (US8.6)
+
+Each collectible card shows a one-to-two sentence fact about the species, adapted from its English
+Wikipedia article. The text is **human-reviewed config**, committed in
+`curated/species-facts.json` (not in the git-ignored `input/`), the same pattern as
+`MANUAL_IMAGE_PICKS`: a rebuild can never silently change what a user reads.
+
+- `npm run draft:facts` (`src/draft-species-facts.js`) fetches each species' Wikipedia REST page
+  summary **by scientific name** (Wikipedia redirects it to the common-name article) and keeps the
+  opening sentences as a first draft, with `"reviewed": false`. It never overwrites an existing
+  entry; pass a scientific name to redraft one, or `--all` for everything.
+- A person then reads every entry and edits it. For the current 61, the opening sentences were
+  often just an alias list or taxonomy ("…from Ancient Greek ταχύς, meaning 'fast'…"), so facts
+  were chosen from the article's later sentences (and, for species whose lead is a single line,
+  its Description / Behaviour sections) instead. Each fact is assembled from sentences in the
+  article — trimmed (alias lists, parentheticals and unit conversions dropped), occasionally two
+  clauses joined, or a subject added where a sentence began with "It" — and states nothing the
+  article does not. Nothing was written from memory.
+- **Content rule:** the audience is health-anxious, so facts about disease, death, injury,
+  predation, extinction or endangerment are left out even when accurate (e.g. the Tasmanian devil
+  fact omits the thylacine extinction; the antechinus facts omit the breeding-season die-off). The
+  draft script prints a flag list to point the reviewer at likely candidates; it is a prompt for
+  the person, not a filter.
+- Setting `"reviewed": true` is the sign-off. `build-gbif.js` refuses to run while any species
+  is unreviewed.
+
+**Licence (carry into the Data Management Plan):** Wikipedia text is **CC BY-SA 4.0**. Attribution
+requires a link to the source article (`factSourceUrl`) and a note that the text was adapted; the
+UI must show both wherever a fact appears. Share-alike applies to the adapted text itself, not to
+the rest of the app.
 
 Every GBIF call goes through one `fetchJson()` with a 30s timeout and up to 7 retries
 (exponential backoff, capped at 15s) — both plain 503s and outright connection failures were
@@ -260,16 +300,27 @@ Output `output/species.json`:
     { "scientificName": "Phascolarctos cinereus", "commonName": "Koala", "order": "Diprotodontia",
       "gbifUsageKey": 2440012, "iucnStatus": "VULNERABLE", "observationCount": 30298,
       "sourceUrl": "https://www.gbif.org/species/2440012",
-      "images": [ { "url": "...", "license": "...", "occurrenceKey": 123 }, ... ] } ] }
+      "fact": "The koala is an arboreal herbivorous marsupial…",
+      "factSourceUrl": "https://en.wikipedia.org/wiki/Koala",
+      "images": [ { "url": "...", "license": "...", "occurrenceKey": 123,
+                    "creator": "...", "publisher": "iNaturalist", "sourceUrl": "..." }, ... ] } ],
+  "factSource": "Wikipedia (English) …", "factLicenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/" }
 ```
+
+The app uses only each species' first image (`sort_order` 1, the human-picked primary); the other
+two stay in the database. For iNaturalist photos, `/original.` in `url` can be swapped for
+`/small.`, `/medium.` or `/large.` to fetch a smaller file. Checked on all 60 iNaturalist primary
+images (both `.jpg` and `.jpeg`): every `small` and `medium` URL returns 200, averaging 41 KB
+(small) and 157 KB (medium) against 1.9 MB for the original. The one ALA primary image
+(*Lasiorhinus krefftii*) already points at ALA's large-thumbnail proxy, so it is used as is.
 
 ### Run
 
 Needs the PostgreSQL database reachable via `DATABASE_URL` (see `../backend/.env.example`). No
 input file to download — this pipeline is a live API pull. With every species covered by
-`MANUAL_IMAGE_PICKS`, a run only needs 4 quick calls per species (no image search), so it takes
-under a minute; before that it took ≈15-20 minutes (the occurrence-image search was consistently
-the slowest, flakiest call).
+`MANUAL_IMAGE_PICKS` there is no image search (that was the slowest, flakiest call, ≈15-20
+minutes). A run now makes ~5 GBIF calls per species plus one occurrence lookup per picked image
+for its credit, one at a time with a short pause — expect on the order of 10-15 minutes.
 
 ```
 npm install
@@ -280,7 +331,16 @@ python ../backend/build_species_db.py
 Writes `output/species.json` (git-ignored build artifact), then upserts 61 rows into `species`
 and 183 rows (3 per species) into `species_images`. Re-run either command any time — both
 upsert, so a re-run refreshes common names/status/observation counts without duplicating rows
-(images stay whatever `MANUAL_IMAGE_PICKS` says, regardless of rebuild).
+(images and facts stay whatever `MANUAL_IMAGE_PICKS` and `curated/species-facts.json` say,
+regardless of rebuild).
+
+The loader adds the US8.6 columns (`fact`, `fact_source_url`, `fact_license`, and on images
+`creator`, `publisher`, `source_url`) to an existing database itself, via `ALTER TABLE … ADD
+COLUMN IF NOT EXISTS` in `../backend/db.py`, so a database loaded before US8.6 needs no manual
+migration. It also refuses to load if any fact or image credit is missing.
+
+`npm run draft:facts` is only needed when a species is added to the `SPECIES` list (see "Species
+facts" above); the committed `curated/species-facts.json` already covers all 61.
 
 ### Picking images for a new species
 

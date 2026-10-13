@@ -29,17 +29,27 @@
 //    snapshot (from data-pipeline/output/gbif-species-verification.json,
 //    2026-09-12) rather than a live ">=20" filter — otherwise the dex
 //    contents could silently change on every rebuild.
+//
+// US8.6 additions (collectible card content):
+//  - Each species carries a one-to-two sentence fact adapted from its English
+//    Wikipedia article (CC BY-SA 4.0). The text lives in
+//    curated/species-facts.json, drafted by draft-species-facts.js and then
+//    reviewed by a person (health/disease/death wording removed — the audience
+//    is health-anxious). This script refuses to run with any unreviewed fact.
+//  - Each image carries its photographer credit and a link to the original
+//    record, read from the GBIF occurrence behind it, because CC BY / BY-NC
+//    require attribution wherever the photo is shown.
 
-import { writeFileSync, mkdirSync, statSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, statSync } from 'node:fs'
 import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
 // --- config (confirm with the team before changing) -------------------------
 // 61 species across the 4 orders that make up Australia's characteristic
 // mammal fauna. See ../README.md for the full inclusion/exclusion rationale.
-const SPECIES = [
+export const SPECIES = [
   // Monotremata (2)
   { scientificName: 'Ornithorhynchus anatinus', order: 'Monotremata' },
   { scientificName: 'Tachyglossus aculeatus', order: 'Monotremata' },
@@ -512,18 +522,19 @@ const LICENSES = ['CC0_1_0', 'CC_BY_4_0', 'CC_BY_NC_4_0']
 const REQUEST_DELAY_MS = 100
 // --------------------------------------------------------------------------
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // GBIF's occurrence search flakes occasionally (observed both a 503 and a
 // read timeout while researching this script) — retry with backoff rather
-// than let one blip fail the whole run.
-async function fetchJson(url, { tries = 7, timeoutMs = 30000 } = {}) {
+// than let one blip fail the whole run. `headers` exists for the Wikipedia
+// call in draft-species-facts.js, which requires a descriptive User-Agent.
+export async function fetchJson(url, { tries = 7, timeoutMs = 30000, headers } = {}) {
   let lastError
   for (let attempt = 1; attempt <= tries; attempt++) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
     try {
-      const res = await fetch(url, { signal: controller.signal })
+      const res = await fetch(url, { signal: controller.signal, headers })
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`)
       return await res.json()
     } catch (error) {
@@ -702,7 +713,59 @@ async function resolveImages(usageKey, scientificName) {
   return pickImages(usageKey, scientificName)
 }
 
-async function buildSpecies(entry, index, total) {
+// Several picked images share one occurrence (one iNaturalist observation with
+// multiple photos), so cache the occurrence lookups.
+const occurrenceCache = new Map()
+
+// Photographer credit and original-record link for one image, read from the
+// GBIF occurrence it came from. Fails rather than ship an image without a
+// credit: every allowed license (CC0 aside) requires attribution.
+async function fetchImageCredit(occurrenceKey, imageUrl) {
+  let occurrence = occurrenceCache.get(occurrenceKey)
+  if (!occurrence) {
+    occurrence = await fetchJson(`https://api.gbif.org/v1/occurrence/${occurrenceKey}`)
+    occurrenceCache.set(occurrenceKey, occurrence)
+    await sleep(REQUEST_DELAY_MS)
+  }
+
+  // Exact match on the media identifier: a near-match could credit the wrong
+  // photographer, so a mismatch stops the run for a person to look at.
+  const media = (occurrence.media ?? []).find((m) => m.identifier === imageUrl)
+  if (!media) fail(`Occurrence ${occurrenceKey} has no media item with identifier ${imageUrl}`)
+
+  const creator = media.creator ?? media.rightsHolder ?? occurrence.rightsHolder ?? occurrence.recordedBy
+  if (!creator) fail(`No creator/rightsHolder for ${imageUrl} (occurrence ${occurrenceKey})`)
+
+  return {
+    creator: creator.trim(),
+    // iNaturalist media carry `publisher`; ALA ones do not, but the occurrence
+    // names the institution.
+    publisher: media.publisher ?? occurrence.institutionCode ?? null,
+    // `references` is the iNaturalist observation page; ALA records have none,
+    // so fall back to the GBIF occurrence page (always exists).
+    sourceUrl: occurrence.references ?? `https://www.gbif.org/occurrence/${occurrenceKey}`,
+  }
+}
+
+const FACTS_PATH = join(here, '..', 'curated', 'species-facts.json')
+
+// Reviewed facts (see header comment). A species without a reviewed fact is a
+// hard failure, so the human review pass cannot be skipped by re-running.
+function loadFacts() {
+  const file = JSON.parse(readFileSync(FACTS_PATH, 'utf8'))
+  for (const { scientificName } of SPECIES) {
+    const entry = file.facts[scientificName]
+    if (!entry?.fact || entry.reviewed !== true) {
+      fail(
+        `No reviewed fact for "${scientificName}" in ${FACTS_PATH} — run \`npm run draft:facts\`, ` +
+          `review the entry, then set "reviewed": true.`,
+      )
+    }
+  }
+  return file
+}
+
+async function buildSpecies(entry, index, total, facts) {
   const { scientificName, order } = entry
   process.stdout.write(`[${index + 1}/${total}] ${scientificName} ... `)
 
@@ -714,8 +777,12 @@ async function buildSpecies(entry, index, total) {
   await sleep(REQUEST_DELAY_MS)
   const iucnStatus = await fetchIucnStatus(usageKey)
   await sleep(REQUEST_DELAY_MS)
-  const images = await resolveImages(usageKey, scientificName)
+  const pickedImages = await resolveImages(usageKey, scientificName)
   await sleep(REQUEST_DELAY_MS)
+  const images = []
+  for (const image of pickedImages) {
+    images.push({ ...image, ...(await fetchImageCredit(image.occurrenceKey, image.url)) })
+  }
   const observationCount = await fetchObservationCount(usageKey)
 
   if (iucnStatus === 'EXTINCT') {
@@ -735,14 +802,18 @@ async function buildSpecies(entry, index, total) {
     iucnStatus,
     observationCount,
     sourceUrl: `https://www.gbif.org/species/${usageKey}`,
+    fact: facts.facts[scientificName].fact,
+    factSourceUrl: facts.facts[scientificName].sourceUrl,
     images,
   }
 }
 
 async function main() {
+  const facts = loadFacts()
+
   const species = []
   for (let i = 0; i < SPECIES.length; i++) {
-    species.push(await buildSpecies(SPECIES[i], i, SPECIES.length))
+    species.push(await buildSpecies(SPECIES[i], i, SPECIES.length, facts))
     if (i < SPECIES.length - 1) await sleep(REQUEST_DELAY_MS)
   }
 
@@ -750,6 +821,8 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: 'GBIF (Global Biodiversity Information Facility) occurrence records, Australia',
     sourceUrl: 'https://www.gbif.org/',
+    factSource: facts.source,
+    factLicenseUrl: facts.licenseUrl,
     speciesCount: species.length,
     species,
   }
@@ -776,4 +849,7 @@ async function main() {
   console.log('  output:', outPath, `(${(statSync(outPath).size / 1024).toFixed(1)} KB)`)
 }
 
-main().catch((error) => fail(error.stack ?? String(error)))
+// Guarded so draft-species-facts.js can import SPECIES without running a build.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => fail(error.stack ?? String(error)))
+}

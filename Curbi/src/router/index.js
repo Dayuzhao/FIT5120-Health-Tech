@@ -9,6 +9,8 @@ import ContactView from '../views/ContactView.vue'
 import HelpFinderView from '../views/HelpFinderView.vue'
 import GameView from '../views/GameView.vue'
 import AtmosphereView from '../views/AtmosphereView.vue'
+import ProgressView from '../views/ProgressView.vue'
+import MyTasksView from '../views/MyTasksView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -61,6 +63,21 @@ const router = createRouter({
       path: '/atmosphere',
       name: 'atmosphere',
       component: AtmosphereView,
+    },
+    {
+      path: '/progress',
+      name: 'progress',
+      component: ProgressView,
+    },
+    {
+      // The collection lives on the progress page now; keep old links working.
+      path: '/collection',
+      redirect: '/progress',
+    },
+    {
+      path: '/my-tasks',
+      name: 'my-tasks',
+      component: MyTasksView,
     },
   ],
 })

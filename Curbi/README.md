@@ -27,6 +27,34 @@ running. `VITE_API_BASE_URL` sets its base URL:
 
 Copy `.env.example` to `.env.local` to override locally.
 
+## Try the companion locally
+
+Start the companion-only backend in one terminal from the repository root. This
+local mode serves the chatbot without requiring PostgreSQL:
+
+```powershell
+Set-Location backend
+python -m pip install -r requirements.txt
+python -m uvicorn companion.local_app:app --reload
+```
+
+Set `GEMINI_API_KEY` in `backend/.env`; `GEMINI_COMPANION_MODEL` defaults to
+`gemini-3.1-flash-lite`. In a second terminal, start the frontend from the `Curbi`
+directory:
+
+```powershell
+Set-Location Curbi
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite. Click Curbi to open chat, then expand **Your
+companion** to choose a personality or select **Make it yours** to enter a custom
+style. Your choice is stored in that browser; Curbi's safety boundaries remain
+fixed.
+Other app features that read open data still require the full backend (`main:app`)
+and a reachable PostgreSQL database configured by `DATABASE_URL`.
+
 ## Setup
 
 ```sh

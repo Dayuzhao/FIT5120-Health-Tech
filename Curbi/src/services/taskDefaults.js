@@ -1,0 +1,1 @@
+export const DEFAULT_TASK_DURATION_SECONDS = 120

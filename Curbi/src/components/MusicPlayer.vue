@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useMusicPlayer } from '@/composables/useMusicPlayer'
 
 const {
@@ -19,6 +20,19 @@ const {
 
 const audioElRef = ref(null)
 
+// Usability finding: tapping the track area opens the Atmosphere settings from
+// any page. On /atmosphere itself the link would go nowhere, so it renders as a
+// plain block there. The transport buttons stay outside the link so they keep
+// controlling playback instead of navigating.
+const route = useRoute()
+const onAtmosphere = computed(() => route.path === '/atmosphere')
+const linkLabel = computed(() => {
+  const status = isPlaying.value ? 'Playing' : 'Paused'
+  return currentTrack.value
+    ? `${status}: ${currentTrack.value.name}. Open atmosphere settings`
+    : 'Open atmosphere settings'
+})
+
 onMounted(() => {
   audioEl.value = audioElRef.value
   loadTracks()
@@ -29,7 +43,13 @@ onMounted(() => {
   <div class="music-player">
     <audio ref="audioElRef" :src="currentTrack?.audioUrl" :muted="muted" @ended="goNext"></audio>
 
-    <div class="track-info">
+    <component
+      :is="onAtmosphere ? 'div' : RouterLink"
+      :to="onAtmosphere ? undefined : '/atmosphere'"
+      :aria-label="onAtmosphere ? undefined : linkLabel"
+      class="track-info"
+      :class="{ 'is-link': !onAtmosphere }"
+    >
       <img v-if="currentTrack" :src="currentTrack.albumImageUrl" alt="" class="album-art" />
       <div v-else class="album-art album-art-placeholder">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></svg>
@@ -39,7 +59,9 @@ onMounted(() => {
         <template v-if="currentTrack">{{ currentTrack.name }} · {{ currentTrack.artistName }}</template>
         <template v-else>{{ failed ? 'Music unavailable' : 'Loading music…' }}</template>
       </p>
-    </div>
+
+      <svg v-if="!onAtmosphere" class="link-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 6 15 12 9 18" /></svg>
+    </component>
 
     <div class="controls">
       <button class="icon-button" type="button" :disabled="!currentTrack" aria-label="Previous track" @click="goPrevious">
@@ -113,6 +135,30 @@ onMounted(() => {
   gap: 8px;
   min-width: 0;
   flex: 1;
+}
+
+.track-info.is-link {
+  padding: 3px 6px 3px 3px;
+  margin: -3px 0 -3px -3px;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.track-info.is-link:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.track-info.is-link:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 1px;
+}
+
+.link-chevron {
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .album-art {

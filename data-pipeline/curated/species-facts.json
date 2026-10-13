@@ -1,0 +1,435 @@
+{
+  "source": "Wikipedia (English), REST page summary — https://en.wikipedia.org/api/rest_v1/",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "retrievedAt": "2026-10-03",
+  "facts": {
+    "Ornithorhynchus anatinus": {
+      "fact": "The platypus is a semiaquatic, egg-laying mammal endemic to eastern Australia, including Tasmania. Like other monotremes, it has a sense of electrolocation, which it uses to detect prey in water while its eyes, ears and nostrils are closed.",
+      "wikipediaTitle": "Platypus",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Platypus",
+      "revision": "1376973599",
+      "reviewed": true
+    },
+    "Tachyglossus aculeatus": {
+      "fact": "The short-beaked echidna is covered in fur and spines and has a distinctive snout and a specialised tongue, which it uses to catch its insect prey at a great speed. Like the other living monotremes, it lays eggs.",
+      "wikipediaTitle": "Short-beaked echidna",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Short-beaked_echidna",
+      "revision": "1375500341",
+      "reviewed": true
+    },
+    "Acrobates pygmaeus": {
+      "fact": "The feathertail glider is a species of marsupial native to eastern Australia. It is the world's smallest gliding mammal and is named for its long feather-shaped tail.",
+      "wikipediaTitle": "Feathertail glider",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Feathertail_glider",
+      "revision": "1356680422",
+      "reviewed": true
+    },
+    "Aepyprymnus rufescens": {
+      "fact": "The rufous rat-kangaroo, or rufous bettong, is a small, jumping, rat-like marsupial native to eastern Australia. The largest member of the potoroo and bettong family, it is about the size of a rabbit.",
+      "wikipediaTitle": "Rufous rat-kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Rufous_rat-kangaroo",
+      "revision": "1315310086",
+      "reviewed": true
+    },
+    "Bettongia lesueur": {
+      "fact": "The boodie, also known as the burrowing bettong, is a small, furry, rat-like mammal native to Australia. It lives in burrows and is active at night when it forages for fungi, roots, and other plant matter.",
+      "wikipediaTitle": "Boodie",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Boodie",
+      "revision": "1372440318",
+      "reviewed": true
+    },
+    "Burramys parvus": {
+      "fact": "The mountain pygmy possum is a small, mouse-sized nocturnal marsupial of Australia found in dense alpine rock screes and boulder fields. It is the only Australian mammal restricted to alpine habitat.",
+      "wikipediaTitle": "Mountain pygmy possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Mountain_pygmy_possum",
+      "revision": "1374629195",
+      "reviewed": true
+    },
+    "Cercartetus concinnus": {
+      "fact": "The western pygmy possum is a small nocturnal marsupial found in Australia. It forages on the ground or in trees and shrubs, mainly feeding on the pollen and nectar of plants such as Eucalyptus and Melaleuca.",
+      "wikipediaTitle": "Western pygmy possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Western_pygmy_possum",
+      "revision": "1361258367",
+      "reviewed": true
+    },
+    "Cercartetus nanus": {
+      "fact": "The eastern pygmy possum is a marsupial of south-eastern Australia. It is found in a range of habitats, including rainforest, sclerophyll forest, woodland and heath.",
+      "wikipediaTitle": "Eastern pygmy possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Eastern_pygmy_possum",
+      "revision": "1327744570",
+      "reviewed": true
+    },
+    "Dactylopsila trivirgata": {
+      "fact": "The striped possum is black with three white stripes running head to tail, and its head has white stripes that form a 'Y' shape. It is closely related to the sugar glider, and is similar in appearance.",
+      "wikipediaTitle": "Striped possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Striped_possum",
+      "revision": "1374520929",
+      "reviewed": true
+    },
+    "Hypsiprymnodon moschatus": {
+      "fact": "The musky rat-kangaroo is a small marsupial found only in the rainforests of northeastern Australia. Its omnivorous diet is known to include fruit and fungi, as well as small animals such as insects and other invertebrates.",
+      "wikipediaTitle": "Musky rat-kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Musky_rat-kangaroo",
+      "revision": "1372171933",
+      "reviewed": true
+    },
+    "Lasiorhinus krefftii": {
+      "fact": "The northern hairy-nosed wombat is nocturnal, living underground in networks of burrows. They avoid coming above ground during harsh weather, as their burrows maintain a constant humidity and temperature.",
+      "wikipediaTitle": "Northern hairy-nosed wombat",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Northern_hairy-nosed_wombat",
+      "revision": "1376428943",
+      "reviewed": true
+    },
+    "Lasiorhinus latifrons": {
+      "fact": "The southern hairy-nosed wombat is found in scattered areas of semiarid scrub and mallee from the eastern Nullarbor Plain to the New South Wales border area. It is the smallest of the three wombat species and the state animal of South Australia.",
+      "wikipediaTitle": "Southern hairy-nosed wombat",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Southern_hairy-nosed_wombat",
+      "revision": "1354908300",
+      "reviewed": true
+    },
+    "Macropus fuliginosus": {
+      "fact": "The western grey kangaroo is one of the largest macropods in Australia. It has a nickname \"stinker\" because mature males have a distinctive curry-like odour.",
+      "wikipediaTitle": "Western grey kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Western_grey_kangaroo",
+      "revision": "1332391628",
+      "reviewed": true
+    },
+    "Macropus giganteus": {
+      "fact": "The eastern grey kangaroo is a marsupial found in the eastern third of Australia, with a population of several million. A large male can typically weigh up to 69 kg and have a length of well over 2 m.",
+      "wikipediaTitle": "Eastern grey kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Eastern_grey_kangaroo",
+      "revision": "1374994549",
+      "reviewed": true
+    },
+    "Notamacropus agilis": {
+      "fact": "The agile wallaby, also known as the sandy wallaby, is a species of wallaby found in northern Australia and southern New Guinea. It is the most common wallaby in north Australia.",
+      "wikipediaTitle": "Agile wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Agile_wallaby",
+      "revision": "1377428455",
+      "reviewed": true
+    },
+    "Notamacropus dorsalis": {
+      "fact": "The black-striped wallaby, also known as the scrub wallaby, is a medium-sized wallaby found in Australia, from Townsville in Queensland to Narrabri in New South Wales. In New South Wales, it is only found west of the Great Dividing Range.",
+      "wikipediaTitle": "Black-striped wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Black-striped_wallaby",
+      "revision": "1314099836",
+      "reviewed": true
+    },
+    "Notamacropus eugenii": {
+      "fact": "The tammar wallaby, also known as the dama wallaby or darma wallaby, is a small macropod native to South and Western Australia. Skull variations differentiate between tammar wallabies from Western Australia, Kangaroo Island, and mainland South Australia, making them distinct population groups.",
+      "wikipediaTitle": "Tammar wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Tammar_wallaby",
+      "revision": "1376344331",
+      "reviewed": true
+    },
+    "Notamacropus parma": {
+      "fact": "The parma wallaby is a small marsupial macropod mammal native to forests and densely-vegetated areas of northeastern New South Wales. About the size of a stout cat, it lives mainly under thick plant cover, and is only active at night when it emerges to feed on grasses and small plants.",
+      "wikipediaTitle": "Parma wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Parma_wallaby",
+      "revision": "1373538381",
+      "reviewed": true
+    },
+    "Notamacropus parryi": {
+      "fact": "The whiptail wallaby, also known as the pretty-faced wallaby, is a species of wallaby found in eastern Australia. It is distinguished by its paler colouring and white stripe under its face.",
+      "wikipediaTitle": "Whiptail wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Whiptail_wallaby",
+      "revision": "1315246781",
+      "reviewed": true
+    },
+    "Notamacropus rufogriseus": {
+      "fact": "The red-necked wallaby, or Bennett's wallaby, is a medium-sized macropod marsupial, common in the more temperate and fertile parts of eastern Australia, including Tasmania. It has been introduced to several other countries, including New Zealand and Ireland.",
+      "wikipediaTitle": "Red-necked wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Red-necked_wallaby",
+      "revision": "1359788201",
+      "reviewed": true
+    },
+    "Osphranter antilopinus": {
+      "fact": "The antilopine kangaroo, also known as the antilopine wallaroo, is a species of macropod found in northern Australia: in Cape York Peninsula in Queensland, the Top End of the Northern Territory, and the Kimberley region of Western Australia. It is a locally common, gregarious grazer.",
+      "wikipediaTitle": "Antilopine kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Antilopine_kangaroo",
+      "revision": "1369391624",
+      "reviewed": true
+    },
+    "Osphranter rufus": {
+      "fact": "The red kangaroo is the largest of all kangaroos, the largest terrestrial mammal native to Australia, and the largest living marsupial.",
+      "wikipediaTitle": "Red kangaroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Red_kangaroo",
+      "revision": "1377718476",
+      "reviewed": true
+    },
+    "Petauroides volans": {
+      "fact": "The southern greater glider is a large gliding marsupial native to the forests of southeastern Australia, growing to the size of a house cat. Its thick fur, which is white or cream underneath, makes it look bigger than it is.",
+      "wikipediaTitle": "Southern greater glider",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Southern_greater_glider",
+      "revision": "1373412847",
+      "reviewed": true
+    },
+    "Petaurus australis": {
+      "fact": "The yellow-bellied glider, also known as the fluffy glider, is an arboreal and nocturnal gliding possum that lives in native eucalypt forests in eastern Australia, from northern Queensland south to Victoria. It is the largest of the wrist-winged gliders, and can glide up to 150 m.",
+      "wikipediaTitle": "Yellow-bellied glider",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Yellow-bellied_glider",
+      "revision": "1373474405",
+      "reviewed": true
+    },
+    "Petaurus breviceps": {
+      "fact": "The sugar glider is a small, omnivorous, arboreal, and nocturnal gliding possum. The common name refers to its predilection for sugary foods such as sap and nectar and its ability to glide through the air, much like a flying squirrel.",
+      "wikipediaTitle": "Sugar glider",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Sugar_glider",
+      "revision": "1371770820",
+      "reviewed": true
+    },
+    "Petaurus norfolcensis": {
+      "fact": "The squirrel glider is a nocturnal gliding possum. When gliding, its prehensile tail acts as a rudder, allowing it to steer in the direction it wants to go.",
+      "wikipediaTitle": "Squirrel glider",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Squirrel_glider",
+      "revision": "1373474794",
+      "reviewed": true
+    },
+    "Petrogale lateralis": {
+      "fact": "The black-flanked rock-wallaby is a shy, nocturnal herbivore. Because most of its water comes from its diet, it rarely drinks and can conserve water by taking refuge from the heat in rocky caves.",
+      "wikipediaTitle": "Black-flanked rock-wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Black-flanked_rock-wallaby",
+      "revision": "1314076451",
+      "reviewed": true
+    },
+    "Petrogale penicillata": {
+      "fact": "The brush-tailed rock-wallaby inhabits rock piles and cliff lines along the Great Dividing Range from about 100 km north-west of Brisbane to northern Victoria, in vegetation ranging from rainforest to dry sclerophyll forests.",
+      "wikipediaTitle": "Brush-tailed rock-wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Brush-tailed_rock-wallaby",
+      "revision": "1351101374",
+      "reviewed": true
+    },
+    "Petrogale xanthopus": {
+      "fact": "The yellow-footed rock-wallaby has a distinct white cheek stripe, with ears ranging in colour from orange to grey-brown. Its forearms and hind legs are bright yellow to rich orange to a light orange-brown.",
+      "wikipediaTitle": "Yellow-footed rock-wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Yellow-footed_rock-wallaby",
+      "revision": "1360696311",
+      "reviewed": true
+    },
+    "Phascolarctos cinereus": {
+      "fact": "The koala is an arboreal herbivorous marsupial native to Australia. It is easily recognisable by its stout, tailless body and large head with round, fluffy ears and large, dark nose.",
+      "wikipediaTitle": "Koala",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Koala",
+      "revision": "1377376990",
+      "reviewed": true
+    },
+    "Potorous tridactylus": {
+      "fact": "The long-nosed potoroo is a small, hopping mammal native to forests and shrubland of southeastern Australia and Tasmania. It lives alone and digs at night for fungi, roots, or small insects.",
+      "wikipediaTitle": "Long-nosed potoroo",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Long-nosed_potoroo",
+      "revision": "1314570545",
+      "reviewed": true
+    },
+    "Pseudocheirus occidentalis": {
+      "fact": "The western ringtail possum, or ngwayir, is a cat-sized marsupial with a stocky build, dark greyish-brown fur, pale underparts and a long prehensile tail with a whitish tip. Ngwayir forage at night through the upper canopy of trees, feeding on young leaves, flowers and fruit.",
+      "wikipediaTitle": "Western ringtail possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Western_ringtail_possum",
+      "revision": "1342147689",
+      "reviewed": true
+    },
+    "Pseudocheirus peregrinus": {
+      "fact": "The common ringtail possum lives in a variety of habitats and eats a variety of leaves of both native and introduced plants, as well as flowers, fruits and sap. It carries its young in a pouch, where they develop for 120-130 days before leaving.",
+      "wikipediaTitle": "Common ringtail possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Common_ringtail_possum",
+      "revision": "1376928582",
+      "reviewed": true
+    },
+    "Pseudochirops archeri": {
+      "fact": "The green ringtail possum is a species of ringtail possum found only in northern Australia. This makes it unique in its genus, all other members of which are found in New Guinea or nearby islands.",
+      "wikipediaTitle": "Green ringtail possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Green_ringtail_possum",
+      "revision": "1314040814",
+      "reviewed": true
+    },
+    "Setonix brachyurus": {
+      "fact": "The quokka is a macropod native to Australia. It is about the size of a domestic cat, and like other marsupials in the macropod family, it is herbivorous and mainly nocturnal.",
+      "wikipediaTitle": "Quokka",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Quokka",
+      "revision": "1377248392",
+      "reviewed": true
+    },
+    "Tarsipes rostratus": {
+      "fact": "The honey possum, or noolbenger, is a tiny species of marsupial. It feeds on the nectar and pollen of a diverse range of flowering plants. Endemic to southwest Australia, it is an important pollinator for such plants as Banksia attenuata, Banksia coccinea and Adenanthos cuneatus.",
+      "wikipediaTitle": "Honey possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Honey_possum",
+      "revision": "1358238582",
+      "reviewed": true
+    },
+    "Trichosurus cunninghami": {
+      "fact": "The mountain brushtail possum, or southern bobuck, is a nocturnal, semi-arboreal marsupial native to southeastern Australia. It was not described as a separate species until 2002.",
+      "wikipediaTitle": "Mountain brushtail possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Mountain_brushtail_possum",
+      "revision": "1315121412",
+      "reviewed": true
+    },
+    "Trichosurus vulpecula": {
+      "fact": "The common brushtail possum is the Australian marsupial most often seen by city dwellers, as it is one of few that thrive in cities and a wide range of natural and human-modified environments. It comes in four colour variations: silver-grey, brown, black, and gold.",
+      "wikipediaTitle": "Common brushtail possum",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Common_brushtail_possum",
+      "revision": "1376183563",
+      "reviewed": true
+    },
+    "Vombatus ursinus": {
+      "fact": "The common wombat is herbivorous, mainly nocturnal, and lives in burrows. Being a marsupial, its joeys inhabit a pouch on the mother for around five months after birth.",
+      "wikipediaTitle": "Common wombat",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Common_wombat",
+      "revision": "1375302839",
+      "reviewed": true
+    },
+    "Wallabia bicolor": {
+      "fact": "The swamp wallaby is a small macropod marsupial of eastern Australia. It is also commonly known as the black wallaby, fern wallaby or black pademelon, and is nicknamed \"stinker\" on account of its characteristic swampy odour.",
+      "wikipediaTitle": "Swamp wallaby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Swamp_wallaby",
+      "revision": "1368891307",
+      "reviewed": true
+    },
+    "Antechinus agilis": {
+      "fact": "The agile antechinus is a species of small carnivorous marsupial that inhabits wet or moist forest in the southeastern corner of Australia. It feeds mostly on invertebrates, including beetles, spiders and cockroaches. Groups of up to 20 have been known to nest together.",
+      "wikipediaTitle": "Agile antechinus",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Agile_antechinus",
+      "revision": "1313979347",
+      "reviewed": true
+    },
+    "Antechinus flavipes": {
+      "fact": "The yellow-footed antechinus, also known as the mardo, is a shrew-like marsupial found in Australia. Notable features include a white eye-ring and a black tip to the tail.",
+      "wikipediaTitle": "Yellow-footed antechinus",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Yellow-footed_antechinus",
+      "revision": "1327145006",
+      "reviewed": true
+    },
+    "Antechinus stuartii": {
+      "fact": "The brown antechinus is mostly nocturnal and arboreal, and females build large communal nests shared by many individuals. Its diet includes beetles, spiders, amphipods, and cockroaches, although it is an opportunistic feeder.",
+      "wikipediaTitle": "Brown antechinus",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Brown_antechinus",
+      "revision": "1314177501",
+      "reviewed": true
+    },
+    "Antechinus swainsonii": {
+      "fact": "The dusky antechinus is the largest antechinus and can be distinguished from its relatives by its much darker fur. It is most common in mountainous regions, including Kosciuszko National Park and the Brindabella Ranges.",
+      "wikipediaTitle": "Dusky antechinus",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Dusky_antechinus",
+      "revision": "1314243493",
+      "reviewed": true
+    },
+    "Dasyurus geoffroii": {
+      "fact": "The western quoll, also known as the chuditch, is about the size of a domestic cat. It is coloured a rufous brown and has 40-70 white spots on its back with a creamy white underside.",
+      "wikipediaTitle": "Western quoll",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Western_quoll",
+      "revision": "1317953171",
+      "reviewed": true
+    },
+    "Dasyurus hallucatus": {
+      "fact": "The northern quoll is a carnivorous marsupial native to Australia. It occurs from the Pilbara region of Western Australia across the Northern Territory to south east Queensland, and is most abundant in rocky ranges and open eucalypt forest.",
+      "wikipediaTitle": "Northern quoll",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Northern_quoll",
+      "revision": "1377190059",
+      "reviewed": true
+    },
+    "Dasyurus maculatus": {
+      "fact": "The tiger quoll, also known as the spotted-tailed quoll, is a carnivorous marsupial native to Australia. With males and females weighing around 3.5 and 1.8 kg, respectively, it is the world's second-largest living carnivorous marsupial, behind the Tasmanian devil.",
+      "wikipediaTitle": "Tiger quoll",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Tiger_quoll",
+      "revision": "1374203144",
+      "reviewed": true
+    },
+    "Dasyurus viverrinus": {
+      "fact": "Eastern quolls are about the size of a small domestic cat. They can be distinguished from all other species of quolls by the presence of only four toes, rather than five, on the hind feet.",
+      "wikipediaTitle": "Eastern quoll",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Eastern_quoll",
+      "revision": "1357865634",
+      "reviewed": true
+    },
+    "Myrmecobius fasciatus": {
+      "fact": "The numbat, also known as the noombat or walpurti, is an insectivorous marsupial. It is diurnal and its diet consists almost exclusively of termites.",
+      "wikipediaTitle": "Numbat",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Numbat",
+      "revision": "1375745300",
+      "reviewed": true
+    },
+    "Phascogale calura": {
+      "fact": "The red-tailed phascogale is smaller and browner than its close relative, the brush-tailed phascogale. It is around 10 cm long and weighs about 60 g. The animal can leap up to 2 m.",
+      "wikipediaTitle": "Red-tailed phascogale",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Red-tailed_phascogale",
+      "revision": "1360864557",
+      "reviewed": true
+    },
+    "Phascogale tapoatafa": {
+      "fact": "The brush-tailed phascogale is grey, and its tail is covered with long black hairs on the lower half that can erect, causing it to appear similar to a bottle brush.",
+      "wikipediaTitle": "Brush-tailed phascogale",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Brush-tailed_phascogale",
+      "revision": "1374394511",
+      "reviewed": true
+    },
+    "Sarcophilus harrisii": {
+      "fact": "The Tasmanian devil is a carnivorous marsupial now confined to the island of Tasmania. The size of a small dog, it is the largest carnivorous marsupial in the world, with a stocky and muscular build, black fur, an extremely loud screech and a keen sense of smell.",
+      "wikipediaTitle": "Tasmanian devil",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Tasmanian_devil",
+      "revision": "1375246517",
+      "reviewed": true
+    },
+    "Sminthopsis crassicaudata": {
+      "fact": "The fat-tailed dunnart is a species of mouse-like marsupial. One of the smallest carnivorous marsupials, it weighs between 10 and 20 grams, and it stores fat reserves in its carrot-shaped tail for times of food shortage.",
+      "wikipediaTitle": "Fat-tailed dunnart",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Fat-tailed_dunnart",
+      "revision": "1372249062",
+      "reviewed": true
+    },
+    "Sminthopsis macroura": {
+      "fact": "The stripe-faced dunnart is a small, nocturnal \"marsupial mouse\" of inland central and northern Australia. It has a gestation period of eleven days, the shortest of any mammal.",
+      "wikipediaTitle": "Stripe-faced dunnart",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Stripe-faced_dunnart",
+      "revision": "1372375185",
+      "reviewed": true
+    },
+    "Sminthopsis murina": {
+      "fact": "The slender-tailed dunnart, also known as the common dunnart in Australia, is a marsupial. It has an average body length of 7 to 12 centimetres with a tail length of 5.5 to 13 centimetres.",
+      "wikipediaTitle": "Slender-tailed dunnart",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Slender-tailed_dunnart",
+      "revision": "1372371127",
+      "reviewed": true
+    },
+    "Isoodon auratus": {
+      "fact": "The golden bandicoot is a short-nosed bandicoot found in northern Australia. It is the smallest of its genus, and is distinguished from the brown bandicoots by its golden colouring and much smaller size.",
+      "wikipediaTitle": "Golden bandicoot",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Golden_bandicoot",
+      "revision": "1361693285",
+      "reviewed": true
+    },
+    "Isoodon macrourus": {
+      "fact": "The northern brown bandicoot is a marsupial found only on the northern and eastern coasts of Australia and nearby islands. It has a reverse pouch so it won't fill with soil when digging.",
+      "wikipediaTitle": "Northern brown bandicoot",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Northern_brown_bandicoot",
+      "revision": "1369407462",
+      "reviewed": true
+    },
+    "Isoodon obesulus": {
+      "fact": "Southern brown bandicoots are nocturnal and omnivorous, feeding on insects, spiders, worms, plant roots, ferns, and fungi. They spend very little time drinking, being able to obtain sufficient water from their diet alone.",
+      "wikipediaTitle": "Southern brown bandicoot",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Southern_brown_bandicoot",
+      "revision": "1345925468",
+      "reviewed": true
+    },
+    "Macrotis lagotis": {
+      "fact": "The greater bilby is a long-eared, rabbit-like marsupial found in Australia. It lives in burrows and is active at night, feeding on insects, fruit, or fungi.",
+      "wikipediaTitle": "Greater bilby",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Greater_bilby",
+      "revision": "1369580562",
+      "reviewed": true
+    },
+    "Perameles gunnii": {
+      "fact": "The eastern barred bandicoot is a nocturnal, rabbit-sized marsupial endemic to southeastern Australia, being native to the island of Tasmania and mainland Victoria. It is distinguishable from the long-nosed bandicoot via three or four dark horizontal bars found on its rump.",
+      "wikipediaTitle": "Eastern barred bandicoot",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Eastern_barred_bandicoot",
+      "revision": "1353180812",
+      "reviewed": true
+    },
+    "Perameles nasuta": {
+      "fact": "The long-nosed bandicoot is a species of bandicoot found in eastern Australia. Around 40 centimetres long, it is sandy- or grey-brown with a long snouty nose, and it forages at night for invertebrates, fungi and plants.",
+      "wikipediaTitle": "Long-nosed bandicoot",
+      "sourceUrl": "https://en.wikipedia.org/wiki/Long-nosed_bandicoot",
+      "revision": "1359881815",
+      "reviewed": true
+    }
+  }
+}

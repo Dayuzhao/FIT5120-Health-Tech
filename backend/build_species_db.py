@@ -23,11 +23,13 @@ SOURCE_JSON = BASE_DIR.parent / "data-pipeline" / "output" / "species.json"
 UPSERT_SPECIES = """
 INSERT INTO species (
     scientific_name, common_name, taxon_order, gbif_usage_key,
-    iucn_status, observation_count, source_url
+    iucn_status, observation_count, source_url,
+    fact, fact_source_url, fact_license
 )
 VALUES (
     %(scientific_name)s, %(common_name)s, %(taxon_order)s, %(gbif_usage_key)s,
-    %(iucn_status)s, %(observation_count)s, %(source_url)s
+    %(iucn_status)s, %(observation_count)s, %(source_url)s,
+    %(fact)s, %(fact_source_url)s, %(fact_license)s
 )
 ON CONFLICT (scientific_name) DO UPDATE SET
     common_name = EXCLUDED.common_name,
@@ -35,21 +37,43 @@ ON CONFLICT (scientific_name) DO UPDATE SET
     gbif_usage_key = EXCLUDED.gbif_usage_key,
     iucn_status = EXCLUDED.iucn_status,
     observation_count = EXCLUDED.observation_count,
-    source_url = EXCLUDED.source_url
+    source_url = EXCLUDED.source_url,
+    fact = EXCLUDED.fact,
+    fact_source_url = EXCLUDED.fact_source_url,
+    fact_license = EXCLUDED.fact_license
 """
 
 UPSERT_IMAGE = """
-INSERT INTO species_images (scientific_name, sort_order, image_url, license, gbif_occurrence_key)
-VALUES (%(scientific_name)s, %(sort_order)s, %(image_url)s, %(license)s, %(gbif_occurrence_key)s)
+INSERT INTO species_images (
+    scientific_name, sort_order, image_url, license, gbif_occurrence_key,
+    creator, publisher, source_url
+)
+VALUES (
+    %(scientific_name)s, %(sort_order)s, %(image_url)s, %(license)s, %(gbif_occurrence_key)s,
+    %(creator)s, %(publisher)s, %(source_url)s
+)
 ON CONFLICT (scientific_name, sort_order) DO UPDATE SET
     image_url = EXCLUDED.image_url,
     license = EXCLUDED.license,
-    gbif_occurrence_key = EXCLUDED.gbif_occurrence_key
+    gbif_occurrence_key = EXCLUDED.gbif_occurrence_key,
+    creator = EXCLUDED.creator,
+    publisher = EXCLUDED.publisher,
+    source_url = EXCLUDED.source_url
 """
 
 
 def main() -> None:
     data = json.loads(SOURCE_JSON.read_text(encoding="utf-8"))
+
+    # The DB columns are nullable (they were added to a table that already had
+    # rows), so enforce here that nothing ships without its fact or credit: the
+    # licences require attribution wherever the data is shown.
+    for s in data["species"]:
+        if not s.get("fact") or not s.get("factSourceUrl"):
+            raise SystemExit(f"{s['scientificName']}: missing fact / factSourceUrl in species.json")
+        for image in s["images"]:
+            if not image.get("creator") or not image.get("sourceUrl"):
+                raise SystemExit(f"{s['scientificName']}: image missing creator / sourceUrl in species.json")
 
     species_rows = [
         {
@@ -60,6 +84,9 @@ def main() -> None:
             "iucn_status": s["iucnStatus"],
             "observation_count": s["observationCount"],
             "source_url": s["sourceUrl"],
+            "fact": s["fact"],
+            "fact_source_url": s["factSourceUrl"],
+            "fact_license": data["factLicenseUrl"],
         }
         for s in data["species"]
     ]
@@ -70,6 +97,9 @@ def main() -> None:
             "image_url": image["url"],
             "license": image["license"],
             "gbif_occurrence_key": image["occurrenceKey"],
+            "creator": image["creator"],
+            "publisher": image["publisher"],
+            "source_url": image["sourceUrl"],
         }
         for s in data["species"]
         for i, image in enumerate(s["images"])

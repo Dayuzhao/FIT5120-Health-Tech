@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { db, ensureSeeded } from '@/db'
+import { isTaskEligibleForUrge } from '@/services/taskSelection'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +16,7 @@ const loading = ref(true)
 const error = ref('')
 const switching = ref(false)
 const completing = ref(false)
+const closing = ref(false)
 
 const hasTask = computed(() => currentTask.value !== null)
 
@@ -85,21 +87,24 @@ watch(currentTask, resetTimer)
 onUnmounted(clearTimerInterval)
 
 function chooseRandomTask(excludeId = null) {
-  const pool = tasks.value.filter((task) => task.id !== excludeId)
+  const pool = tasks.value.filter(
+    (task) => task.id !== excludeId,
+  )
 
-  // Prefer tasks tagged for the current urge category; fall back to the full
-  // pool when none match (e.g. no urge type, or that category has no matches).
-  const matching = urgeCategory.value
-    ? pool.filter((task) => task.categories?.includes(urgeCategory.value))
-    : []
-
-  const candidates = matching.length > 0 ? matching : pool
+  const candidates = urgeCategory.value
+    ? pool.filter((task) =>
+        isTaskEligibleForUrge(task, urgeCategory.value),
+      )
+    : pool
 
   if (candidates.length === 0) {
-    return tasks.value[0] ?? null
+    return null
   }
 
-  const randomIndex = Math.floor(Math.random() * candidates.length)
+  const randomIndex = Math.floor(
+    Math.random() * candidates.length,
+  )
+
   return candidates[randomIndex]
 }
 
@@ -184,6 +189,35 @@ async function switchTask() {
   }
 }
 
+  async function closeTask() {
+  if (closing.value || completing.value) return
+
+  closing.value = true
+  clearTimerInterval()
+  timerRunning.value = false
+
+  try {
+    if (urgeEventId.value) {
+      const existingEvent = await db.urgeEvents.get(urgeEventId.value)
+
+      if (
+        existingEvent &&
+        (existingEvent.outcome === null ||
+          existingEvent.outcome === undefined)
+      ) {
+        await db.urgeEvents.update(urgeEventId.value, {
+          endedAt: Date.now(),
+          outcome: 'abandoned',
+        })
+      }
+    }
+  } catch (closeError) {
+    console.error('Unable to record closed task:', closeError)
+  } finally {
+    await router.push({ name: 'urge' })
+  }
+}
+
 async function completeTask() {
   if (completing.value || !currentTask.value) return
 
@@ -223,7 +257,6 @@ async function completeTask() {
           urgeEventId: eventId,
           taskId: currentTask.value.id,
           completedAt,
-          reliefScore: null,
         })
       },
     )
@@ -265,6 +298,15 @@ onMounted(loadTask)
       </div>
 
       <template v-else-if="hasTask">
+        <button
+          class="task-close-button"
+          type="button"
+          aria-label="Close task and return to behaviour choices"
+          :disabled="closing || completing"
+          @click="closeTask"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
         <div class="task-icon">🌿</div>
 
         <p class="eyebrow">YOUR TASK</p>
@@ -348,12 +390,56 @@ onMounted(loadTask)
 }
 
 .task-card {
+  position: relative;
   max-width: 680px;
   margin: 0 auto;
   padding: 44px;
   border: 1px solid #e2e9e4;
   border-radius: 24px;
   background: white;
+}
+
+.task-close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: 1px solid #c9d8cd;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #416f50;
+
+  font: inherit;
+  font-size: 28px;
+  line-height: 1;
+
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.task-close-button:hover:not(:disabled) {
+  border-color: #9fb9a7;
+  background: #f3f7f4;
+}
+
+.task-close-button:focus-visible {
+  outline: 3px solid #8db69a;
+  outline-offset: 3px;
+}
+
+.task-close-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .task-icon {

@@ -1,0 +1,12 @@
+{
+  "source": "Hand-picked by a team member in the species photo focus picker, 2026-10-05",
+  "note": "x and y are percentages across and down the photo (0 to 100). The app uses them as CSS object-position so the chosen point stays visible when the photo is cropped to a square tile or a 4:3 picture. Species not listed stay centred. Loaded by backend/build_species_db.py into species_images.focus_x / focus_y (sort_order 1 only).",
+  "focus": {
+    "Antechinus flavipes": { "x": 42, "y": 15 },
+    "Cercartetus concinnus": { "x": 76, "y": 30 },
+    "Lasiorhinus krefftii": { "x": 59, "y": 82 },
+    "Notamacropus parma": { "x": 58, "y": 28 },
+    "Phascogale calura": { "x": 32, "y": 19 },
+    "Setonix brachyurus": { "x": 50, "y": 5 }
+  }
+}

@@ -2,6 +2,8 @@
 import { onBeforeUnmount, ref } from 'vue'
 import '@google/model-viewer'
 
+const emit = defineEmits(['open-chat'])
+
 const clickViewer = ref(null)
 
 const isPlaying = ref(false)
@@ -32,6 +34,11 @@ const playAnimation = () => {
   }, viewer.duration * 1000 + 100)
 }
 
+const handleCompanionClick = () => {
+  playAnimation()
+  emit('open-chat')
+}
+
 const returnToIdle = () => {
   isPlaying.value = false
 }
@@ -45,8 +52,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div
-    class="companion-wrapper"
-    @click="playAnimation"
+     class="companion-wrapper"
+    @click="handleCompanionClick"
   >
     <model-viewer
       class="companion-model"
