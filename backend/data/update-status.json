@@ -1,0 +1,18 @@
+{
+  "state": "idle",
+  "running": false,
+  "lastCheckStartedAt": "2026-09-01T10:56:31.775Z",
+  "lastCheckCompletedAt": "2026-09-01T10:56:32.629Z",
+  "lastSuccessfulCheckAt": "2026-09-01T10:56:32.629Z",
+  "latestRemoteDataset": {
+    "financialYear": "2024–25",
+    "title": "Data tables: Medicare mental health services 2024–25",
+    "releaseDate": "2026-05-12",
+    "downloadUrl": "https://www.aihw.gov.au/getmedia/e733afb1-0cba-4998-be88-86fa9291e621/Medicare-mental-health-service-2024-25.zip",
+    "fileSizeKb": 716
+  },
+  "updateApplied": false,
+  "error": null,
+  "trigger": "startup",
+  "updateReason": null
+}

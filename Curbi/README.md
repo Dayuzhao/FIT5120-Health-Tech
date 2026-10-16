@@ -65,6 +65,25 @@ npm run preview   # serve the production build locally
 npm run format    # Prettier over src/
 ```
 
+## Android app (Capacitor)
+
+The `android/` project wraps the Vite production build. Install Android Studio
+with its Android SDK, then open the project and run it on an emulator or a
+connected Android device:
+
+```powershell
+npm install
+npm run cap:android
+npm run cap:open:android
+```
+
+Run `npm run cap:android` again after frontend changes; it rebuilds the site and
+copies the updated assets into the native project. The current application ID is
+`com.curbi.app`; replace it with the team's chosen permanent ID before publishing.
+The native app can load its bundled screens without a server, but features that
+call the backend (including chat and service lookup) need a deployed, reachable
+HTTPS API. `localhost` from a phone or emulator is not the developer machine.
+
 ## Recommended IDE setup
 
 [VS Code](https://code.visualstudio.com/) +
